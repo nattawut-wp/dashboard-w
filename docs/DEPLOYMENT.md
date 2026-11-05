@@ -15,7 +15,7 @@
 ## สถานะปัจจุบัน
 
 - [x] หน้าตาพื้นฐาน + เมนู (ขั้น 1)
-- [ ] ฐานข้อมูล Supabase + Prisma (ขั้น 2) — ตัวแปร `DATABASE_URL`, `DIRECT_URL`
+- [x] ฐานข้อมูล Supabase + Prisma (ขั้น 2) — ตัวแปร `DATABASE_URL`, `DIRECT_URL`
 - [ ] Login ด้วย Better Auth (ขั้น 3) — ตัวแปร `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
 - [ ] หน้าออร์เดอร์และ Dashboard (ขั้น 4–5)
 
@@ -25,8 +25,8 @@
 
 | ชื่อ | ความหมาย | ตัวอย่าง |
 |---|---|---|
-| `DATABASE_URL` | connection string แบบ **Transaction pooler** (port 6543) ให้แอปใช้ | `postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
-| `DIRECT_URL` | connection string แบบ **Session/Direct** (port 5432) ให้ Prisma ใช้ตอน migrate | `postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres` |
+| `DATABASE_URL` | connection string แบบ **Transaction pooler** (port 6543) ให้แอปใช้ตอนทำงาน (`lib/prisma.ts`) | `postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
+| `DIRECT_URL` | connection string แบบ **Session pooler** (port 5432) ให้คำสั่ง `prisma migrate` / `db seed` / `studio` ใช้ (`prisma.config.ts`) | `postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres` |
 | `BETTER_AUTH_SECRET` | รหัสลับสำหรับเข้ารหัส session (สุ่มใหม่ทุก environment) | สร้างด้วย `npx @better-auth/cli secret` |
 | `BETTER_AUTH_URL` | URL ของเว็บใน environment นั้น | `http://localhost:3000` |
 
@@ -44,13 +44,18 @@
 npm install
 ```
 
-1. สร้างโปรเจกต์ Supabase สำหรับ dev (region: Southeast Asia (Singapore))
+1. สร้างโปรเจกต์ Supabase สำหรับ dev (แนะนำ region ใกล้ไทย เช่น Singapore — โปรเจกต์ dev ตอนนี้อยู่ Mumbai `ap-south-1` ใช้ได้แต่ช้ากว่าเล็กน้อย)
 2. สร้างไฟล์ `.env` ที่โฟลเดอร์โปรเจกต์ ใส่ตัวแปรตามตารางด้านบน (`BETTER_AUTH_URL=http://localhost:3000`)
-3. สร้างตารางในฐานข้อมูล และใส่ข้อมูลตัวอย่าง *(ใช้ได้หลังขั้น 2)*
+3. สร้างตารางในฐานข้อมูล และใส่ข้อมูลตัวอย่าง
    ```bash
    npx prisma migrate dev
+   npx prisma db execute --file prisma/sql/enable-rls-migrations-table.sql
    npx prisma db seed
    ```
+   - บรรทัดที่ 2 รันครั้งเดียวต่อฐานข้อมูล (ปิดไม่ให้ตารางประวัติ migration ถูกอ่านผ่าน API ของ Supabase — ตาราง `orders` เปิด RLS ใน migration ให้แล้ว)
+   - seed จะใส่ข้อมูลเฉพาะตอนตารางว่าง ถ้าอยากล้างแล้วใส่ใหม่: `npx prisma db seed -- --reset`
+   - ดู/แก้ข้อมูลผ่านหน้าเว็บ: `npx prisma studio`
+   - แก้ `prisma/schema.prisma` แล้ว → `npx prisma migrate dev --name <ชื่อการเปลี่ยนแปลง>`
 4. สร้างบัญชีผู้ดูแล *(ใช้ได้หลังขั้น 3)*
    ```bash
    npm run create-admin -- you@example.com รหัสผ่าน
@@ -77,9 +82,11 @@ npm run build
    - `BETTER_AUTH_URL` = URL ของ branch develop เช่น `https://<project>-git-develop-<team>.vercel.app`
 3. Vercel → Settings → Build and Deployment → Build Command:
    ```bash
-   prisma generate && prisma migrate deploy && next build
+   prisma migrate deploy && next build
    ```
-4. สร้างบัญชีผู้ดูแลกับฐานข้อมูล staging (รันจากเครื่อง โดยชี้ `.env` ไปที่ staging ชั่วคราว)
+   (`prisma generate` รันเองตอน `npm install` ผ่านสคริปต์ `postinstall`)
+4. หลัง deploy ครั้งแรก เปิด RLS ให้ตาราง `_prisma_migrations` (รันจากเครื่อง โดยชี้ `DIRECT_URL` ไปที่ staging ชั่วคราว) — คำสั่งเดียวกับ Local dev ข้อ 3 บรรทัดที่ 2
+5. สร้างบัญชีผู้ดูแลกับฐานข้อมูล staging (รันจากเครื่อง โดยชี้ `.env` ไปที่ staging ชั่วคราว)
 
 Deploy: merge งานเข้า `develop` แล้ว push → Vercel deploy ให้อัตโนมัติ
 
@@ -93,7 +100,8 @@ Deploy: merge งานเข้า `develop` แล้ว push → Vercel deplo
    - `BETTER_AUTH_URL` = โดเมนจริง เช่น `https://<project>.vercel.app`
    - `BETTER_AUTH_SECRET` ต้อง**ไม่ซ้ำ**กับ staging
 3. Build Command เหมือน staging (Vercel ใช้ค่าเดียวกันทุก environment)
-4. สร้างบัญชีผู้ดูแลจริงครั้งเดียว — **ไม่รัน seed**
+4. หลัง deploy ครั้งแรก เปิด RLS ให้ `_prisma_migrations` เหมือน staging ข้อ 4
+5. สร้างบัญชีผู้ดูแลจริงครั้งเดียว — **ไม่รัน seed**
 
 Deploy (ตาม git flow):
 ```bash
