@@ -25,8 +25,8 @@
 
 | ชื่อ | ความหมาย | ตัวอย่าง |
 |---|---|---|
-| `DATABASE_URL` | connection string แบบ **Transaction pooler** (port 6543) ให้แอปใช้ตอนทำงาน (`lib/prisma.ts`) | `postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
-| `DIRECT_URL` | connection string แบบ **Session pooler** (port 5432) ให้คำสั่ง `prisma migrate` / `db seed` / `studio` ใช้ (`prisma.config.ts`) | `postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres` |
+| `DATABASE_URL` | connection string แบบ **Transaction pooler** (port 6543) ให้แอปใช้ตอนทำงาน (`lib/prisma.ts`) | `postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
+| `DIRECT_URL` | connection string แบบ **Session pooler** (port 5432) ให้คำสั่ง `prisma migrate` / `db seed` / `studio` ใช้ (`prisma.config.ts`) | `postgresql://postgres.xxxx:[PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres` |
 | `BETTER_AUTH_SECRET` | รหัสลับสำหรับเข้ารหัส session (สุ่มใหม่ทุก environment) | สร้างด้วย `npx @better-auth/cli secret` |
 | `BETTER_AUTH_URL` | URL ของเว็บใน environment นั้น | `http://localhost:3000` |
 
@@ -44,7 +44,7 @@
 npm install
 ```
 
-1. สร้างโปรเจกต์ Supabase สำหรับ dev (แนะนำ region ใกล้ไทย เช่น Singapore — โปรเจกต์ dev ตอนนี้อยู่ Mumbai `ap-south-1` ใช้ได้แต่ช้ากว่าเล็กน้อย)
+1. สร้างโปรเจกต์ Supabase สำหรับ dev (region: Southeast Asia (Singapore) `ap-southeast-1` — ใกล้ไทยที่สุด ใช้ region เดียวกันทุก environment)
 2. สร้างไฟล์ `.env` ที่โฟลเดอร์โปรเจกต์ ใส่ตัวแปรตามตารางด้านบน (`BETTER_AUTH_URL=http://localhost:3000`)
 3. สร้างตารางในฐานข้อมูล และใส่ข้อมูลตัวอย่าง
    ```bash
