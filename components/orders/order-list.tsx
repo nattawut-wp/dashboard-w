@@ -57,22 +57,23 @@ export function OrderList({ orders }: { orders: OrderRow[] }) {
           <li key={order.id}>
             <Card className="py-4">
               <CardContent className="space-y-3 px-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="truncate font-medium">{order.customerName}</div>
-                    {order.customerPhone && (
-                      <a
-                        href={`tel:${order.customerPhone}`}
-                        className="text-sm text-muted-foreground tabular-nums underline-offset-2 hover:underline"
-                      >
-                        {formatThaiPhone(order.customerPhone)}
-                      </a>
-                    )}
-                    <div className="text-xs text-muted-foreground">
-                      {formatOrderNumber(order.id)} · {formatThaiDateTime(order.orderedAt)}
-                    </div>
+                <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span className="font-mono">{formatOrderNumber(order.id)}</span>
+                  <span>{formatThaiDateTime(order.orderedAt)}</span>
+                </div>
+                <div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 truncate font-medium">{order.customerName}</div>
+                    <div className="shrink-0 text-right font-semibold tabular-nums">{formatBaht(order.total)}</div>
                   </div>
-                  <div className="shrink-0 text-right font-semibold tabular-nums">{formatBaht(order.total)}</div>
+                  {order.customerPhone && (
+                    <a
+                      href={`tel:${order.customerPhone}`}
+                      className="text-sm text-muted-foreground tabular-nums underline-offset-2 hover:underline"
+                    >
+                      {formatThaiPhone(order.customerPhone)}
+                    </a>
+                  )}
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <StatusBadge status={order.status} />
