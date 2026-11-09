@@ -60,6 +60,14 @@ export function OrderList({ orders }: { orders: OrderRow[] }) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="truncate font-medium">{order.customerName}</div>
+                    {order.customerPhone && (
+                      <a
+                        href={`tel:${order.customerPhone}`}
+                        className="text-sm text-muted-foreground tabular-nums underline-offset-2 hover:underline"
+                      >
+                        {formatThaiPhone(order.customerPhone)}
+                      </a>
+                    )}
                     <div className="text-xs text-muted-foreground">
                       {formatOrderNumber(order.id)} · {formatThaiDateTime(order.orderedAt)}
                     </div>
