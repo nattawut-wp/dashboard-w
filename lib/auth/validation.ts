@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
 
 // อีเมล: ตัดช่องว่าง + เป็นตัวเล็กเสมอ (Admin@Shop.com กับ admin@shop.com คือคนเดียวกัน)
