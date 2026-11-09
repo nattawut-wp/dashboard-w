@@ -22,6 +22,19 @@ describe("orderToFormDefaults (หน้าแก้ไข)", () => {
       note: "",
     });
   });
+
+  it("เบอร์โทร → แสดงในช่องแบบมีขีด 080-671-8527", () => {
+    const defaults = orderToFormDefaults({
+      id: 7,
+      customerName: "มาลี",
+      customerPhone: "0806718527",
+      total: "1250.50",
+      status: "PAID",
+      orderedAt: new Date("2026-11-08T17:05:00Z"),
+      note: null,
+    });
+    expect(defaults.customerPhone).toBe("080-671-8527");
+  });
 });
 
 describe("newOrderFormDefaults (หน้าเพิ่ม)", () => {
