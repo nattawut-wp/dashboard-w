@@ -20,3 +20,7 @@ const LABELS = new Map<string, string>([
 export function statusLabel(status: string): string {
   return LABELS.get(status) ?? "ไม่ทราบสถานะ";
 }
+
+export function isOrderStatus(value: unknown): value is OrderStatus {
+  return typeof value === "string" && LABELS.has(value);
+}

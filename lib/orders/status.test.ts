@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { ORDER_STATUSES, statusLabel } from "./status";
+import { isOrderStatus, ORDER_STATUSES, statusLabel } from "./status";
+
+describe("isOrderStatus", () => {
+  it("เฉพาะสถานะที่มีจริงเท่านั้น", () => {
+    expect(ORDER_STATUSES.every(isOrderStatus)).toBe(true);
+    for (const value of ["REFUNDED", "paid", "", "toString", null, undefined, 1, ["PAID"]]) {
+      expect(isOrderStatus(value)).toBe(false);
+    }
+  });
+});
 
 describe("statusLabel", () => {
   it("แปลงทุกสถานะเป็นภาษาไทย", () => {
