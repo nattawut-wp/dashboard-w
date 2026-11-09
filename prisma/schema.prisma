@@ -11,9 +11,9 @@ datasource db {
 
 /// สถานะออร์เดอร์
 enum OrderStatus {
-  PENDING   // รอชำระ
-  PAID      // ชำระแล้ว
-  SHIPPED   // จัดส่งแล้ว
+  PENDING // รอชำระ
+  PAID // ชำระแล้ว
+  SHIPPED // จัดส่งแล้ว
   CANCELLED // ยกเลิก
 }
 
@@ -34,4 +34,80 @@ model Order {
   @@index([orderedAt])
   @@index([status, orderedAt])
   @@map("orders")
+}
+
+// ---- ตารางของระบบ login (Better Auth) ----
+// สร้างด้วย `npx auth@1.7.17 generate` — ถ้าแก้ config ใน lib/auth/server.ts ให้สร้างใหม่ อย่าแก้มือ
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model RateLimit {
+  id          String @id
+  key         String
+  count       Int
+  lastRequest BigInt
+
+  @@unique([key])
+  @@map("rateLimit")
 }
