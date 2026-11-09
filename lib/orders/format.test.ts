@@ -1,5 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { formatBaht, formatOrderNumber, formatThaiDateTime } from "./format";
+import { formatBaht, formatOrderNumber, formatThaiDateTime, formatThaiPhone } from "./format";
+
+describe("formatThaiPhone", () => {
+  it("มือถือ 10 หลัก → 080-671-8527", () => {
+    expect(formatThaiPhone("0806718527")).toBe("080-671-8527");
+  });
+
+  it("เบอร์บ้าน 9 หลัก → 02-123-4567", () => {
+    expect(formatThaiPhone("021234567")).toBe("02-123-4567");
+  });
+
+  it("ไม่มีเบอร์ (null / undefined / ว่าง) → '—'", () => {
+    expect(formatThaiPhone(null)).toBe("—");
+    expect(formatThaiPhone(undefined)).toBe("—");
+    expect(formatThaiPhone("")).toBe("—");
+    expect(formatThaiPhone("   ")).toBe("—");
+  });
+
+  it("รูปแบบอื่น (ข้อมูลเก่าที่ไม่ตรงกฎ) → แสดงตามเดิม ไม่ใส่ขีดมั่ว", () => {
+    for (const phone of ["1234567890", "123456789", "08123456", "08123456789", "080-671-8527", "+66806718527"]) {
+      expect(formatThaiPhone(phone)).toBe(phone);
+    }
+  });
+});
 
 describe("formatThaiDateTime", () => {
   it("แสดงตามเวลาไทย (UTC+7) แบบ วัน เดือนย่อ ปี พ.ศ. ชั่วโมง:นาที", () => {

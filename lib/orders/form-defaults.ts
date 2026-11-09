@@ -1,4 +1,5 @@
 import { toBangkokDateTimeInput } from "./datetime";
+import { formatThaiPhone } from "./format";
 import { OrderStatus } from "./status";
 import type { OrderRow } from "./types";
 import type { ORDER_FIELDS } from "./validation";
@@ -9,7 +10,7 @@ export type OrderFormDefaults = Record<(typeof ORDER_FIELDS)[number], string>;
 export function orderToFormDefaults(order: OrderRow): OrderFormDefaults {
   return {
     customerName: order.customerName,
-    customerPhone: order.customerPhone ?? "",
+    customerPhone: order.customerPhone ? formatThaiPhone(order.customerPhone) : "",
     total: order.total,
     status: order.status,
     orderedAt: toBangkokDateTimeInput(order.orderedAt),

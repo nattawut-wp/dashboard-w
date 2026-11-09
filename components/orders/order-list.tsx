@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { OrderRow } from "@/lib/orders/types";
-import { formatBaht, formatOrderNumber, formatThaiDateTime } from "@/lib/orders/format";
+import { formatBaht, formatOrderNumber, formatThaiDateTime, formatThaiPhone } from "@/lib/orders/format";
 import { DeleteOrderButton } from "./delete-order-button";
 import { StatusBadge } from "./status-badge";
 
@@ -35,7 +35,7 @@ export function OrderList({ orders }: { orders: OrderRow[] }) {
                 <TableCell>
                   <div className="font-medium">{order.customerName}</div>
                   {order.customerPhone && (
-                    <div className="text-xs text-muted-foreground">{order.customerPhone}</div>
+                    <div className="text-xs text-muted-foreground tabular-nums">{formatThaiPhone(order.customerPhone)}</div>
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{formatThaiDateTime(order.orderedAt)}</TableCell>
