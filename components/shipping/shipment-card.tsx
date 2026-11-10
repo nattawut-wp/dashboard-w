@@ -8,6 +8,8 @@ import { formatBaht, formatOrderNumber, formatThaiDateTime, formatThaiPhone } fr
 import { carrierLabel } from "@/lib/shipping/carriers";
 import type { ShipmentRow } from "@/lib/shipping/data";
 import { shipmentBlocker } from "@/lib/shipping/rules";
+import { PaymentBadge } from "@/components/orders/payment-badge";
+import { StatusBadge } from "@/components/orders/status-badge";
 import { CodActions } from "./cod-actions";
 import { ShipForm } from "./ship-form";
 import { ShippedActions } from "./shipped-actions";
@@ -21,10 +23,14 @@ export function ShipmentCard({ order }: { order: ShipmentRow }) {
   return (
     <Card className="py-4">
       <CardContent className="space-y-4 px-4">
-        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-          <Link href={`/orders/${order.id}/edit`} className="font-mono underline-offset-2 hover:underline">
-            {formatOrderNumber(order.id)}
-          </Link>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span className="flex flex-wrap items-center gap-1.5">
+            <Link href={`/orders/${order.id}/edit`} className="font-mono underline-offset-2 hover:underline">
+              {formatOrderNumber(order.id)}
+            </Link>
+            <StatusBadge status={order.status} />
+            <PaymentBadge paymentMethod={order.paymentMethod} status={order.status} codCollectedAt={order.codCollectedAt} />
+          </span>
           <span>สั่ง {formatThaiDateTime(order.orderedAt)}</span>
         </div>
 
