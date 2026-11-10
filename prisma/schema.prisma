@@ -31,7 +31,7 @@ model Order {
   id              Int              @id @default(autoincrement())
   customerName    String
   customerPhone   String?
-  /// ยอดรวม (บาท) = ผลรวมของรายการสินค้า — แอปคำนวณให้ตอนบันทึก (เก็บไว้เพื่อให้หน้า Dashboard รวมยอดได้เร็ว)
+  /// ยอดรวม (บาท) — กรอกเองในฟอร์ม (คลังสินค้าไม่มีราคา) ใช้ Decimal เพื่อไม่ให้ทศนิยมเพี้ยน
   total           Decimal          @db.Decimal(12, 2)
   status          OrderStatus      @default(PENDING)
   /// วันเวลาที่ลูกค้าสั่ง (ใช้ทำกราฟรายวัน)
@@ -58,8 +58,6 @@ model Product {
   /// รหัสสินค้า (ห้ามซ้ำ)
   sku               String      @unique
   name              String
-  /// ราคาขายปัจจุบัน (บาท)
-  price             Decimal     @db.Decimal(12, 2)
   /// จำนวนคงเหลือ — ห้ามติดลบ (มี CHECK ในฐานข้อมูลกันไว้อีกชั้น)
   stock             Int         @default(0)
   /// เหลือเท่านี้หรือน้อยกว่า = "ใกล้หมด"
@@ -83,9 +81,8 @@ model OrderItem {
   productId   Int
   /// สินค้าที่เคยขายแล้วลบไม่ได้ (ใช้ "เลิกขาย" แทน)
   product     Product @relation(fields: [productId], references: [id], onDelete: Restrict)
-  /// ชื่อและราคา ณ ตอนที่ขาย — แก้สินค้าทีหลัง ออร์เดอร์เก่าไม่เปลี่ยนตาม
+  /// ชื่อสินค้า ณ ตอนที่ขาย — แก้ชื่อสินค้าทีหลัง ออร์เดอร์เก่าไม่เปลี่ยนตาม
   productName String
-  unitPrice   Decimal @db.Decimal(12, 2)
   quantity    Int
 
   /// สินค้าเดียวกันอยู่ในออร์เดอร์ได้แถวเดียว (เพิ่มจำนวนแทน)
