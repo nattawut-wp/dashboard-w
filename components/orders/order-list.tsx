@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { OrderListRow, OrderRow } from "@/lib/orders/types";
 import { formatBaht, formatOrderNumber, formatThaiDateTime, formatThaiPhone } from "@/lib/orders/format";
+import { needsShippingAddress } from "@/lib/orders/address";
+import { AddressLine } from "./address-line";
 import { DeleteOrderButton } from "./delete-order-button";
 import { StatusBadge } from "./status-badge";
 
@@ -34,11 +36,15 @@ export function OrderList({ orders }: { orders: OrderListRow[] }) {
                 <TableCell className="font-mono text-muted-foreground">
                   {formatOrderNumber(order.id)}
                 </TableCell>
-                <TableCell>
+                <TableCell className="max-w-56 whitespace-normal">
                   <div className="font-medium">{order.customerName}</div>
                   {order.customerPhone && (
                     <div className="text-xs text-muted-foreground tabular-nums">{formatThaiPhone(order.customerPhone)}</div>
                   )}
+                  <AddressLine
+                    address={order.shippingAddress}
+                    warnMissing={needsShippingAddress(order.status, order.shippingAddress)}
+                  />
                 </TableCell>
                 {/* ชื่อกับจำนวนอยู่คนละคอลัมน์ แต่บรรทัดตรงกัน (บรรทัดละ 1 สินค้า ไม่ตัดขึ้นบรรทัดใหม่) */}
                 <TableCell className="max-w-72">
@@ -97,6 +103,10 @@ export function OrderList({ orders }: { orders: OrderListRow[] }) {
                       {formatThaiPhone(order.customerPhone)}
                     </a>
                   )}
+                  <AddressLine
+                    address={order.shippingAddress}
+                    warnMissing={needsShippingAddress(order.status, order.shippingAddress)}
+                  />
                 </div>
                 <OrderItemsLines items={order.items} />
                 <div className="flex items-center justify-between gap-2">
