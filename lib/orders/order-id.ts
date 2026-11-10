@@ -1,9 +1,1 @@
-// id ของตาราง orders เป็น int (SERIAL) ใน Postgres → สูงสุด 2,147,483,647
-const MAX_INT = 2_147_483_647;
-
-/** อ่านเลขออร์เดอร์จาก URL (/orders/[id]/edit) — ค่าที่ใช้ไม่ได้คืน null (แสดงหน้า 404) */
-export function parseOrderId(value: string): number | null {
-  if (!/^[1-9]\d*$/.test(value)) return null;
-  const id = Number(value);
-  return id <= MAX_INT ? id : null;
-}
+export { parseId as parseOrderId } from "@/lib/ids";
