@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import type { SaveOrderState } from "@/app/(admin)/orders/actions";
 import { ORDER_STATUSES, statusLabel } from "@/lib/orders/status";
 import type { OrderFormDefaults } from "@/lib/orders/form-defaults";
+import type { ProductOption } from "@/lib/orders/types";
+import { OrderItemsField } from "./order-items-field";
 import type { ORDER_FIELDS } from "@/lib/orders/validation";
 
 type Field = (typeof ORDER_FIELDS)[number];
@@ -20,12 +22,24 @@ type Field = (typeof ORDER_FIELDS)[number];
 type Props = {
   action: (prev: SaveOrderState, formData: FormData) => Promise<SaveOrderState>;
   defaults: OrderFormDefaults;
+  /** สินค้าให้เลือก + รายการเดิม + จำนวนที่ออร์เดอร์นี้จองไว้ (หน้าแก้ไข) */
+  products: ProductOption[];
+  defaultItems?: { productId: number; quantity: number }[];
+  reserved?: Record<number, number>;
   /** วันเวลาปัจจุบัน (เวลาไทย) — ใช้จำกัดช่องวันที่ไม่ให้เลือกอนาคต */
   maxOrderedAt: string;
   submitLabel: string;
 };
 
-export function OrderForm({ action, defaults, maxOrderedAt, submitLabel }: Props) {
+export function OrderForm({
+  action,
+  defaults,
+  products,
+  defaultItems = [],
+  reserved = {},
+  maxOrderedAt,
+  submitLabel,
+}: Props) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(action, {});
 
@@ -62,6 +76,13 @@ export function OrderForm({ action, defaults, maxOrderedAt, submitLabel }: Props
           <FormField label="ชื่อลูกค้า" field="customerName" error={error("customerName")} required>
             <Input {...fieldProps("customerName")} autoComplete="off" maxLength={100} className="h-11 text-base" />
           </FormField>
+
+          <OrderItemsField
+            products={products}
+            defaultItems={defaultItems}
+            reserved={reserved}
+            error={state.errors?.items}
+          />
 
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField label="เบอร์โทร" field="customerPhone" error={error("customerPhone")} hint="ไม่บังคับ">
