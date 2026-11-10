@@ -46,6 +46,8 @@ function orderSchema(now: Date) {
         .max(now, "วันเวลาที่สั่งต้องไม่อยู่ในอนาคต"),
     ),
     note: optionalText().pipe(z.string().max(500, "หมายเหตุยาวเกิน 500 ตัวอักษร").nullable()),
+    // ไม่บังคับตอนสร้าง — แต่ต้องมีก่อนบันทึกการจัดส่ง
+    shippingAddress: optionalText().pipe(z.string().max(500, "ที่อยู่จัดส่งยาวเกิน 500 ตัวอักษร").nullable()),
   });
 }
 
@@ -56,6 +58,7 @@ export const ORDER_FIELDS = [
   "status",
   "orderedAt",
   "note",
+  "shippingAddress",
 ] as const;
 
 export type OrderFormData = z.output<ReturnType<typeof orderSchema>>;

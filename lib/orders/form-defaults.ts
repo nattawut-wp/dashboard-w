@@ -15,6 +15,7 @@ export function orderToFormDefaults(order: OrderRow): OrderFormDefaults {
     status: order.status,
     orderedAt: toBangkokDateTimeInput(order.orderedAt),
     note: order.note ?? "",
+    shippingAddress: order.shippingAddress ?? "",
   };
 }
 
@@ -27,5 +28,6 @@ export function newOrderFormDefaults(now: Date): OrderFormDefaults {
     status: OrderStatus.PENDING,
     orderedAt: toBangkokDateTimeInput(now),
     note: "",
+    shippingAddress: "",
   };
 }

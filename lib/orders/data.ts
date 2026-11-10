@@ -16,6 +16,7 @@ const select = {
   status: true,
   orderedAt: true,
   note: true,
+  shippingAddress: true,
 } satisfies Prisma.OrderSelect;
 
 function toRow(order: Prisma.OrderGetPayload<{ select: typeof select }>): OrderRow {
