@@ -12,6 +12,7 @@ describe("orderToFormDefaults (หน้าแก้ไข)", () => {
         status: "SHIPPED",
         orderedAt: new Date("2026-11-08T17:05:00Z"),
         note: null,
+        shippingAddress: null,
       }),
     ).toEqual({
       customerName: "มาลี",
@@ -20,10 +21,11 @@ describe("orderToFormDefaults (หน้าแก้ไข)", () => {
       status: "SHIPPED",
       orderedAt: "2026-11-09T00:05",
       note: "",
+      shippingAddress: "",
     });
   });
 
-  it("เบอร์โทร → แสดงในช่องแบบมีขีด 080-671-8527", () => {
+  it("เบอร์โทร → แสดงในช่องแบบมีขีด 080-671-8527, ที่อยู่จัดส่ง → ตามที่บันทึกไว้", () => {
     const defaults = orderToFormDefaults({
       id: 7,
       customerName: "มาลี",
@@ -32,8 +34,10 @@ describe("orderToFormDefaults (หน้าแก้ไข)", () => {
       status: "PAID",
       orderedAt: new Date("2026-11-08T17:05:00Z"),
       note: null,
+      shippingAddress: "45 หมู่ 3\nนนทบุรี 11120",
     });
     expect(defaults.customerPhone).toBe("080-671-8527");
+    expect(defaults.shippingAddress).toBe("45 หมู่ 3\nนนทบุรี 11120");
   });
 });
 
@@ -46,6 +50,7 @@ describe("newOrderFormDefaults (หน้าเพิ่ม)", () => {
       status: "PENDING",
       orderedAt: "2026-11-09T17:00",
       note: "",
+      shippingAddress: "",
     });
   });
 });

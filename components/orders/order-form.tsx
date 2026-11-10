@@ -122,6 +122,17 @@ export function OrderForm({
             </FormField>
           </div>
 
+          <FormField label="ที่อยู่จัดส่ง" field="shippingAddress" error={error("shippingAddress")} hint="ไม่บังคับ — ต้องมีก่อนส่งของ">
+            <Textarea
+              {...fieldProps("shippingAddress")}
+              rows={3}
+              maxLength={500}
+              autoComplete="street-address"
+              placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด รหัสไปรษณีย์"
+              className="text-base"
+            />
+          </FormField>
+
           <FormField label="หมายเหตุ" field="note" error={error("note")} hint="ไม่บังคับ">
             <Textarea {...fieldProps("note")} rows={3} maxLength={500} className="text-base" />
           </FormField>

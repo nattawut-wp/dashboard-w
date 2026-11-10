@@ -9,6 +9,7 @@ export type OrderRow = {
   status: OrderStatus;
   orderedAt: Date;
   note: string | null;
+  shippingAddress: string | null;
 };
 
 /** สินค้า 1 แถวในออร์เดอร์ (ชื่อ ณ ตอนที่ขาย) */
