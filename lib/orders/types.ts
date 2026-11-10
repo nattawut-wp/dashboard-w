@@ -16,3 +16,6 @@ export type OrderItemRow = { productId: number; productName: string; quantity: n
 
 /** ตัวเลือกสินค้าในฟอร์มออร์เดอร์ */
 export type ProductOption = { id: number; sku: string; name: string; stock: number; isActive: boolean };
+
+/** ออร์เดอร์ในหน้ารายการ — มีชื่อสินค้าและจำนวน (ไว้สรุป "ซื้ออะไร") */
+export type OrderListRow = OrderRow & { items: { productName: string; quantity: number }[] };

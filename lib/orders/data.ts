@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { paginate, type OrderListParams } from "./list-params";
-import type { OrderItemRow, OrderRow, ProductOption } from "./types";
+import type { OrderItemRow, OrderListRow, OrderRow, ProductOption } from "./types";
 
 export type { OrderRow };
 
@@ -39,13 +39,14 @@ export async function listOrders({ q, status, page }: OrderListParams) {
   const pagination = paginate(totalItems, page);
   const orders = await prisma.order.findMany({
     where,
-    select,
+    select: { ...select, items: { select: { productName: true, quantity: true }, orderBy: { id: "asc" } } },
     orderBy: [{ orderedAt: "desc" }, { id: "desc" }],
     skip: pagination.skip,
     take: pagination.take,
   });
 
-  return { orders: orders.map(toRow), totalItems, ...pagination };
+  const rows: OrderListRow[] = orders.map(({ items, ...order }) => ({ ...toRow(order), items }));
+  return { orders: rows, totalItems, ...pagination };
 }
 
 export async function getOrder(id: number): Promise<OrderRow | null> {
