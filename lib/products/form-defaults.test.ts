@@ -8,17 +8,16 @@ describe("productToFormDefaults (หน้าแก้ไข)", () => {
         id: 3,
         sku: "CAP-NVY",
         name: "หมวกแก๊ป",
-        price: "250.00",
         stock: 7,
         lowStockThreshold: 0,
         isActive: true,
       }),
-    ).toEqual({ sku: "CAP-NVY", name: "หมวกแก๊ป", price: "250.00", lowStockThreshold: "0", stock: "" });
+    ).toEqual({ sku: "CAP-NVY", name: "หมวกแก๊ป", lowStockThreshold: "0", stock: "" });
   });
 });
 
 describe("newProductFormDefaults (หน้าเพิ่ม)", () => {
   it("ฟอร์มว่าง จำนวนเริ่มต้น 0 เตือนเมื่อเหลือ 5", () => {
-    expect(newProductFormDefaults()).toEqual({ sku: "", name: "", price: "", lowStockThreshold: "5", stock: "0" });
+    expect(newProductFormDefaults()).toEqual({ sku: "", name: "", lowStockThreshold: "5", stock: "0" });
   });
 });

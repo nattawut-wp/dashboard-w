@@ -6,7 +6,6 @@ function form(overrides: Record<string, unknown> = {}) {
   return {
     sku: "TS-WHT-M",
     name: "เสื้อยืด สีขาว M",
-    price: "199",
     lowStockThreshold: "5",
     stock: "20",
     ...overrides,
@@ -17,7 +16,7 @@ describe("parseProductForm", () => {
   it("เพิ่มสินค้า: กรอกถูกต้องครบ → ได้ข้อมูลพร้อมบันทึก", () => {
     expect(parseProductForm(form(), "create")).toEqual({
       success: true,
-      data: { sku: "TS-WHT-M", name: "เสื้อยืด สีขาว M", price: "199.00", lowStockThreshold: 5, stock: 20 },
+      data: { sku: "TS-WHT-M", name: "เสื้อยืด สีขาว M", lowStockThreshold: 5, stock: 20 },
     });
   });
 
@@ -57,28 +56,6 @@ describe("parseProductForm", () => {
         success: false,
         errors: { name: "ชื่อสินค้ายาวเกิน 100 ตัวอักษร" },
       });
-    });
-  });
-
-  describe("ราคา", () => {
-    const priceResult = (price: unknown) => {
-      const result = parseProductForm(form({ price }), "create");
-      return result.success ? result.data.price : result.errors.price;
-    };
-
-    it("มีคอมมา / ทศนิยม 1 ตำแหน่ง → บันทึกเป็นทศนิยม 2 ตำแหน่ง, 0.01 (ต่ำสุด) ผ่าน", () => {
-      expect(priceResult("1,590.5")).toBe("1590.50");
-      expect(priceResult("0.01")).toBe("0.01");
-    });
-
-    it("ว่าง / null → 'กรุณากรอกราคา', 0 / ติดลบ → 'ราคาต้องมากกว่า 0', ไม่ใช่ตัวเลข / เกิน → แจ้งตามกรณี", () => {
-      expect(priceResult("")).toBe("กรุณากรอกราคา");
-      expect(priceResult(null)).toBe("กรุณากรอกราคา");
-      expect(priceResult("0")).toBe("ราคาต้องมากกว่า 0");
-      expect(priceResult("-10")).toBe("ราคาต้องมากกว่า 0");
-      expect(priceResult("abc")).toBe("ราคาต้องเป็นตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง");
-      expect(priceResult("1.999")).toBe("ราคาต้องเป็นตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง");
-      expect(priceResult("10000000000")).toBe("ราคาสูงเกินไป");
     });
   });
 
@@ -122,7 +99,7 @@ describe("parseProductForm", () => {
       for (const stock of [undefined, "999", "abc"]) {
         expect(parseProductForm(form({ stock }), "update")).toEqual({
           success: true,
-          data: { sku: "TS-WHT-M", name: "เสื้อยืด สีขาว M", price: "199.00", lowStockThreshold: 5 },
+          data: { sku: "TS-WHT-M", name: "เสื้อยืด สีขาว M", lowStockThreshold: 5 },
         });
       }
     });
@@ -130,18 +107,17 @@ describe("parseProductForm", () => {
 
   describe("กรณีขอบรวม", () => {
     it("ผิดหลายช่อง → แจ้งทุกช่องพร้อมกัน / ค่าเป็นไฟล์ → ไม่ผ่าน ไม่พัง", () => {
-      expect(parseProductForm(form({ sku: "", name: "", price: "0", stock: "-1" }), "create")).toEqual({
+      expect(parseProductForm(form({ sku: "", name: "", stock: "-1" }), "create")).toEqual({
         success: false,
         errors: {
           sku: "กรุณากรอกรหัสสินค้า",
           name: "กรุณากรอกชื่อสินค้า",
-          price: "ราคาต้องมากกว่า 0",
           stock: "จำนวนเริ่มต้นต้องเป็นจำนวนเต็ม 0–1,000,000",
         },
       });
       const file = new File(["x"], "x.txt");
-      const result = parseProductForm(form({ sku: file, price: file }), "create");
-      expect(!result.success && Object.keys(result.errors).sort()).toEqual(["price", "sku"]);
+      const result = parseProductForm(form({ sku: file, name: file }), "create");
+      expect(!result.success && Object.keys(result.errors).sort()).toEqual(["name", "sku"]);
     });
   });
 });

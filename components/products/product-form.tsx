@@ -71,15 +71,6 @@ export function ProductForm({ action, defaults, mode, submitLabel }: Props) {
               />
             </FormField>
 
-            <FormField label="ราคาขาย (บาท)" field="price" error={error("price")} required>
-              <Input
-                {...fieldProps("price")}
-                inputMode="decimal"
-                placeholder="0.00"
-                className="h-11 text-base tabular-nums"
-              />
-            </FormField>
-
             {mode === "create" && (
               <FormField label="จำนวนเริ่มต้น" field="stock" error={error("stock")} required>
                 <Input {...fieldProps("stock")} inputMode="numeric" className="h-11 text-base tabular-nums" />
