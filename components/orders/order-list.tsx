@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { Package, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { OrderListRow, OrderRow } from "@/lib/orders/types";
-import { summarizeItems } from "@/lib/orders/items-summary";
 import { formatBaht, formatOrderNumber, formatThaiDateTime, formatThaiPhone } from "@/lib/orders/format";
 import { DeleteOrderButton } from "./delete-order-button";
 import { StatusBadge } from "./status-badge";
@@ -20,6 +19,7 @@ export function OrderList({ orders }: { orders: OrderListRow[] }) {
               <TableHead className="w-24">เลขที่</TableHead>
               <TableHead>ลูกค้า</TableHead>
               <TableHead>สินค้า</TableHead>
+              <TableHead className="w-16 text-right">จำนวน</TableHead>
               <TableHead>วันเวลาที่สั่ง</TableHead>
               <TableHead>สถานะ</TableHead>
               <TableHead className="text-right">ยอดรวม</TableHead>
@@ -40,8 +40,26 @@ export function OrderList({ orders }: { orders: OrderListRow[] }) {
                     <div className="text-xs text-muted-foreground tabular-nums">{formatThaiPhone(order.customerPhone)}</div>
                   )}
                 </TableCell>
-                <TableCell className="max-w-64">
-                  <ItemsSummary items={order.items} />
+                {/* ชื่อกับจำนวนอยู่คนละคอลัมน์ แต่บรรทัดตรงกัน (บรรทัดละ 1 สินค้า ไม่ตัดขึ้นบรรทัดใหม่) */}
+                <TableCell className="max-w-72">
+                  {order.items.length === 0 ? (
+                    <span className="text-sm text-muted-foreground">ไม่มีรายการสินค้า</span>
+                  ) : (
+                    <ul className="space-y-1">
+                      {order.items.map((item, i) => (
+                        <li key={i} className="truncate" title={item.productName}>
+                          {item.productName}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <ul className="space-y-1 text-right tabular-nums">
+                    {order.items.map((item, i) => (
+                      <li key={i}>{item.quantity.toLocaleString("th-TH")}</li>
+                    ))}
+                  </ul>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{formatThaiDateTime(order.orderedAt)}</TableCell>
                 <TableCell>
@@ -80,7 +98,7 @@ export function OrderList({ orders }: { orders: OrderListRow[] }) {
                     </a>
                   )}
                 </div>
-                <ItemsSummary items={order.items} />
+                <OrderItemsLines items={order.items} />
                 <div className="flex items-center justify-between gap-2">
                   <StatusBadge status={order.status} />
                   <OrderActions order={order} />
@@ -107,17 +125,21 @@ function OrderActions({ order }: { order: OrderRow }) {
   );
 }
 
-/** "เคสโทรศัพท์ใส ×2, หมวกแก๊ป ×1 · 3 ชิ้น" */
-function ItemsSummary({ items }: { items: OrderListRow["items"] }) {
+/** มือถือ: สินค้าละบรรทัด ชื่อซ้าย จำนวนขวา */
+function OrderItemsLines({ items }: { items: OrderListRow["items"] }) {
   if (items.length === 0) return <p className="text-sm text-muted-foreground">ไม่มีรายการสินค้า</p>;
-  const { text, totalQuantity } = summarizeItems(items);
   return (
-    <p className="flex items-start gap-1.5 text-sm">
-      <Package className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-      <span className="min-w-0">
-        {text}
-        <span className="whitespace-nowrap text-muted-foreground"> · {totalQuantity.toLocaleString("th-TH")} ชิ้น</span>
-      </span>
-    </p>
+    <ul className="space-y-1 rounded-lg bg-muted/50 px-3 py-2 text-sm">
+      <li className="flex justify-between gap-3 text-xs text-muted-foreground">
+        <span>สินค้า</span>
+        <span>จำนวน</span>
+      </li>
+      {items.map((item, i) => (
+        <li key={i} className="flex justify-between gap-3">
+          <span className="min-w-0 truncate">{item.productName}</span>
+          <span className="shrink-0 tabular-nums">{item.quantity.toLocaleString("th-TH")}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
