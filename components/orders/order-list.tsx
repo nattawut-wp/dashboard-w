@@ -19,8 +19,8 @@ export function OrderList({ orders }: { orders: OrderListRow[] }) {
               <TableHead className="w-24">เลขที่</TableHead>
               <TableHead>ลูกค้า</TableHead>
               <TableHead>สินค้า</TableHead>
-              <TableHead className="w-16 text-right">จำนวน</TableHead>
-              <TableHead>วันเวลาที่สั่ง</TableHead>
+              <TableHead className="w-20 text-center">จำนวน</TableHead>
+              <TableHead className="pl-6">วันเวลาที่สั่ง</TableHead>
               <TableHead>สถานะ</TableHead>
               <TableHead className="text-right">ยอดรวม</TableHead>
               <TableHead className="w-28 text-right">
@@ -55,13 +55,13 @@ export function OrderList({ orders }: { orders: OrderListRow[] }) {
                   )}
                 </TableCell>
                 <TableCell>
-                  <ul className="space-y-1 text-right tabular-nums">
+                  <ul className="space-y-1 text-center tabular-nums">
                     {order.items.map((item, i) => (
                       <li key={i}>{item.quantity.toLocaleString("th-TH")}</li>
                     ))}
                   </ul>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{formatThaiDateTime(order.orderedAt)}</TableCell>
+                <TableCell className="pl-6 text-muted-foreground">{formatThaiDateTime(order.orderedAt)}</TableCell>
                 <TableCell>
                   <StatusBadge status={order.status} />
                 </TableCell>
