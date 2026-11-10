@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { Pencil } from "lucide-react";
+import { Package, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { OrderRow } from "@/lib/orders/types";
+import type { OrderListRow, OrderRow } from "@/lib/orders/types";
+import { summarizeItems } from "@/lib/orders/items-summary";
 import { formatBaht, formatOrderNumber, formatThaiDateTime, formatThaiPhone } from "@/lib/orders/format";
 import { DeleteOrderButton } from "./delete-order-button";
 import { StatusBadge } from "./status-badge";
 
 // จอใหญ่ (md ขึ้นไป) = ตาราง / มือถือ = การ์ดเรียงลง (ไม่ต้องเลื่อนซ้าย-ขวา)
-export function OrderList({ orders }: { orders: OrderRow[] }) {
+export function OrderList({ orders }: { orders: OrderListRow[] }) {
   return (
     <>
       <Card className="hidden py-0 md:block">
@@ -18,6 +19,7 @@ export function OrderList({ orders }: { orders: OrderRow[] }) {
             <TableRow>
               <TableHead className="w-24">เลขที่</TableHead>
               <TableHead>ลูกค้า</TableHead>
+              <TableHead>สินค้า</TableHead>
               <TableHead>วันเวลาที่สั่ง</TableHead>
               <TableHead>สถานะ</TableHead>
               <TableHead className="text-right">ยอดรวม</TableHead>
@@ -37,6 +39,9 @@ export function OrderList({ orders }: { orders: OrderRow[] }) {
                   {order.customerPhone && (
                     <div className="text-xs text-muted-foreground tabular-nums">{formatThaiPhone(order.customerPhone)}</div>
                   )}
+                </TableCell>
+                <TableCell className="max-w-64">
+                  <ItemsSummary items={order.items} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">{formatThaiDateTime(order.orderedAt)}</TableCell>
                 <TableCell>
@@ -75,6 +80,7 @@ export function OrderList({ orders }: { orders: OrderRow[] }) {
                     </a>
                   )}
                 </div>
+                <ItemsSummary items={order.items} />
                 <div className="flex items-center justify-between gap-2">
                   <StatusBadge status={order.status} />
                   <OrderActions order={order} />
@@ -98,5 +104,20 @@ function OrderActions({ order }: { order: OrderRow }) {
       </Button>
       <DeleteOrderButton orderId={order.id} />
     </div>
+  );
+}
+
+/** "เคสโทรศัพท์ใส ×2, หมวกแก๊ป ×1 · 3 ชิ้น" */
+function ItemsSummary({ items }: { items: OrderListRow["items"] }) {
+  if (items.length === 0) return <p className="text-sm text-muted-foreground">ไม่มีรายการสินค้า</p>;
+  const { text, totalQuantity } = summarizeItems(items);
+  return (
+    <p className="flex items-start gap-1.5 text-sm">
+      <Package className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+      <span className="min-w-0">
+        {text}
+        <span className="whitespace-nowrap text-muted-foreground"> · {totalQuantity.toLocaleString("th-TH")} ชิ้น</span>
+      </span>
+    </p>
   );
 }

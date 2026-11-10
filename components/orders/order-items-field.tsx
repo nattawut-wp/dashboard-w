@@ -47,7 +47,7 @@ export function OrderItemsField({ products, defaultItems, reserved, error }: Pro
   }
 
   return (
-    <fieldset className="space-y-3" aria-describedby={error ? `${baseId}-error` : undefined}>
+    <fieldset className="min-w-0 space-y-3" aria-describedby={error ? `${baseId}-error` : undefined}>
       <legend className="text-sm font-medium">
         สินค้า<span className="text-destructive" aria-hidden> *</span>
         <span className="font-normal text-muted-foreground"> (ตัดสต็อกอัตโนมัติเมื่อบันทึก)</span>
@@ -97,12 +97,13 @@ export function OrderItemsField({ products, defaultItems, reserved, error }: Pro
                   inputMode="numeric"
                   value={row.quantity}
                   onChange={(event) => update(row.key, { quantity: event.target.value })}
-                  className={cn("h-11 w-20 text-center text-base tabular-nums", short && "border-amber-500")}
+                  className={cn("h-11 w-16 shrink-0 text-center text-base tabular-nums sm:w-20", short && "border-amber-500")}
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-lg"
+                  className="shrink-0"
                   onClick={() => removeRow(row.key)}
                   disabled={rows.length === 1}
                   aria-label={`ลบแถวที่ ${index + 1}`}
