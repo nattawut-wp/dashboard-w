@@ -10,3 +10,9 @@ export type OrderRow = {
   orderedAt: Date;
   note: string | null;
 };
+
+/** สินค้า 1 แถวในออร์เดอร์ (ชื่อ ณ ตอนที่ขาย) */
+export type OrderItemRow = { productId: number; productName: string; quantity: number };
+
+/** ตัวเลือกสินค้าในฟอร์มออร์เดอร์ */
+export type ProductOption = { id: number; sku: string; name: string; stock: number; isActive: boolean };

@@ -14,6 +14,11 @@ function reserved(order: OrderStockState): Map<number, number> {
   return map;
 }
 
+/** จำนวนที่ออร์เดอร์จองไว้ แยกตามรหัสสินค้า (ส่งเข้า Client Component ได้) */
+export function reservedQuantities(order: OrderStockState): Record<number, number> {
+  return Object.fromEntries(reserved(order));
+}
+
 /**
  * สต็อกที่ต้องเปลี่ยนเมื่อออร์เดอร์เปลี่ยนจาก `before` เป็น `after`
  * - สร้าง: before = null / ลบ: after = null

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shortageMessage, stockChanges } from "./stock-changes";
+import { reservedQuantities, shortageMessage, stockChanges } from "./stock-changes";
 
 const item = (productId: number, quantity: number) => ({ productId, quantity });
 
@@ -53,5 +53,14 @@ describe("shortageMessage", () => {
     expect(shortageMessage("เสื้อยืด สีดำ L", 3, 5)).toBe("“เสื้อยืด สีดำ L” เหลือ 3 ชิ้น ไม่พอ (ต้องการ 5)");
     expect(shortageMessage("หมวกแก๊ป", 0, 1)).toBe("“หมวกแก๊ป” หมดแล้ว");
     expect(shortageMessage("ปากกา", 1200, 1500)).toBe("“ปากกา” เหลือ 1,200 ชิ้น ไม่พอ (ต้องการ 1,500)");
+  });
+});
+
+describe("reservedQuantities (จำนวนที่ออร์เดอร์จองไว้ — ใช้แสดง 'เหลือ' ในหน้าแก้ไข)", () => {
+  it("รวมตามสินค้า / ยกเลิกแล้วหรือไม่มีออร์เดอร์ → ไม่จองอะไร", () => {
+    const items = [item(3, 2), item(5, 1), item(3, 1)];
+    expect(reservedQuantities({ status: "PAID", items })).toEqual({ 3: 3, 5: 1 });
+    expect(reservedQuantities({ status: "CANCELLED", items })).toEqual({});
+    expect(reservedQuantities(null)).toEqual({});
   });
 });

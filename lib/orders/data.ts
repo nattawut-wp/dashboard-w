@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { paginate, type OrderListParams } from "./list-params";
-import type { OrderRow } from "./types";
+import type { OrderItemRow, OrderRow, ProductOption } from "./types";
 
 export type { OrderRow };
 
@@ -51,4 +51,23 @@ export async function listOrders({ q, status, page }: OrderListParams) {
 export async function getOrder(id: number): Promise<OrderRow | null> {
   const order = await prisma.order.findUnique({ where: { id }, select });
   return order ? toRow(order) : null;
+}
+
+export async function getOrderItems(orderId: number): Promise<OrderItemRow[]> {
+  return prisma.orderItem.findMany({
+    where: { orderId },
+    select: { productId: true, productName: true, quantity: true },
+    orderBy: { id: "asc" },
+  });
+}
+
+/**
+ * สินค้าให้เลือกในฟอร์มออร์เดอร์: สินค้าที่ยังขาย + สินค้าที่อยู่ในออร์เดอร์นี้อยู่แล้ว (แม้เลิกขายไปแล้ว)
+ */
+export async function listProductOptions(includeIds: number[] = []): Promise<ProductOption[]> {
+  return prisma.product.findMany({
+    where: { OR: [{ isActive: true }, { id: { in: includeIds } }] },
+    select: { id: true, sku: true, name: true, stock: true, isActive: true },
+    orderBy: [{ name: "asc" }, { id: "asc" }],
+  });
 }
