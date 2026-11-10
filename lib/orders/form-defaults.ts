@@ -16,6 +16,7 @@ export function orderToFormDefaults(order: OrderRow): OrderFormDefaults {
     orderedAt: toBangkokDateTimeInput(order.orderedAt),
     note: order.note ?? "",
     shippingAddress: order.shippingAddress ?? "",
+    paymentMethod: order.paymentMethod,
   };
 }
 
@@ -29,5 +30,6 @@ export function newOrderFormDefaults(now: Date): OrderFormDefaults {
     orderedAt: toBangkokDateTimeInput(now),
     note: "",
     shippingAddress: "",
+    paymentMethod: "TRANSFER",
   };
 }
