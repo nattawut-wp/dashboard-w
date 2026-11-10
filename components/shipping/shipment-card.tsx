@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { MapPin, Package, TriangleAlert } from "lucide-react";
+import { Banknote, CircleCheck, MapPin, Package, TriangleAlert } from "lucide-react";
 import { CopyButton } from "@/components/admin/copy-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { saveShipment } from "@/app/(admin)/shipping/actions";
-import { formatOrderNumber, formatThaiDateTime, formatThaiPhone } from "@/lib/orders/format";
+import { formatBaht, formatOrderNumber, formatThaiDateTime, formatThaiPhone } from "@/lib/orders/format";
 import { carrierLabel } from "@/lib/shipping/carriers";
 import type { ShipmentRow } from "@/lib/shipping/data";
 import { shipmentBlocker } from "@/lib/shipping/rules";
+import { CodActions } from "./cod-actions";
 import { ShipForm } from "./ship-form";
 import { ShippedActions } from "./shipped-actions";
 
@@ -38,6 +39,18 @@ export function ShipmentCard({ order }: { order: ShipmentRow }) {
             </a>
           )}
         </div>
+
+        {/* COD ที่ยังไม่ได้เงิน: ยอดที่ต้องให้ขนส่งเก็บ (กรอกในแอปขนส่ง) */}
+        {order.paymentMethod === "COD" && !order.codCollectedAt && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-amber-100 px-3 py-2 text-amber-950 dark:bg-amber-500/20 dark:text-amber-100">
+            <span className="inline-flex items-center gap-1.5 text-sm">
+              <Banknote className="size-4" aria-hidden />
+              เก็บเงินปลายทาง
+              <span className="text-base font-semibold tabular-nums">{formatBaht(order.total)}</span>
+            </span>
+            <CopyButton text={order.total} label="ยอดเก็บเงินปลายทาง" />
+          </div>
+        )}
 
         {/* ที่อยู่เต็ม + ปุ่มคัดลอก (ไว้วางในแอปขนส่ง) */}
         {address ? (
@@ -91,10 +104,21 @@ export function ShipmentCard({ order }: { order: ShipmentRow }) {
                 <span className="text-xs text-muted-foreground">ส่งเมื่อ {formatThaiDateTime(order.shippedAt)}</span>
               )}
             </div>
+            {order.paymentMethod === "COD" &&
+              (order.codCollectedAt ? (
+                <p className="inline-flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-300">
+                  <CircleCheck className="size-4" aria-hidden />
+                  ได้รับเงินปลายทางแล้ว {formatThaiDateTime(order.codCollectedAt)}
+                </p>
+              ) : (
+                <CodActions orderId={order.id} total={order.total} />
+              ))}
             <ShippedActions
               orderId={order.id}
               carrier={order.shippingCarrier ?? ""}
               trackingNumber={order.trackingNumber ?? ""}
+              // ได้เงินปลายทางแล้ว → ย้อนกลับเป็นรอส่งไม่ได้
+              canRevert={shipmentBlocker(order, "revert") === null}
             />
           </div>
         ) : (

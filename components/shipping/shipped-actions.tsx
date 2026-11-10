@@ -19,10 +19,10 @@ import { revertShipment, saveShipment } from "@/app/(admin)/shipping/actions";
 import { formatOrderNumber } from "@/lib/orders/format";
 import { ShipForm } from "./ship-form";
 
-type Props = { orderId: number; carrier: string; trackingNumber: string };
+type Props = { orderId: number; carrier: string; trackingNumber: string; canRevert: boolean };
 
 /** แท็บ "ส่งแล้ว": แก้เลขพัสดุ / ย้อนกลับเป็นรอส่ง */
-export function ShippedActions({ orderId, carrier, trackingNumber }: Props) {
+export function ShippedActions({ orderId, carrier, trackingNumber, canRevert }: Props) {
   const [editing, setEditing] = useState(false);
   const close = useCallback(() => setEditing(false), []);
 
@@ -48,7 +48,7 @@ export function ShippedActions({ orderId, carrier, trackingNumber }: Props) {
         <Pencil className="size-4" />
         แก้เลขพัสดุ
       </Button>
-      <RevertButton orderId={orderId} />
+      {canRevert && <RevertButton orderId={orderId} />}
     </div>
   );
 }
@@ -84,7 +84,7 @@ function RevertButton({ orderId }: { orderId: number }) {
         <AlertDialogHeader>
           <AlertDialogTitle>ย้าย {number} กลับไปรอส่งใช่ไหม?</AlertDialogTitle>
           <AlertDialogDescription>
-            ใช้เมื่อกดบันทึกการจัดส่งผิด — ขนส่งและเลขพัสดุจะถูกล้าง สถานะกลับเป็น “ชำระแล้ว” (สต็อกไม่เปลี่ยน)
+            ใช้เมื่อกดบันทึกการจัดส่งผิด — ขนส่งและเลขพัสดุจะถูกล้าง สถานะกลับเป็น “ชำระแล้ว” (เก็บเงินปลายทาง: “รอชำระ”) สต็อกไม่เปลี่ยน
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
