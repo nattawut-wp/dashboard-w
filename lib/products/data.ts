@@ -13,14 +13,13 @@ const select = {
   id: true,
   sku: true,
   name: true,
-  price: true,
   stock: true,
   lowStockThreshold: true,
   isActive: true,
 } satisfies Prisma.ProductSelect;
 
 function toRow(product: Prisma.ProductGetPayload<{ select: typeof select }>): ProductRow {
-  return { ...product, price: product.price.toFixed(2) };
+  return product;
 }
 
 // เงื่อนไขของแต่ละตัวกรอง — "ใกล้หมด" เทียบกับเกณฑ์ของสินค้าแต่ละตัว (เทียบคอลัมน์กับคอลัมน์)

@@ -32,21 +32,21 @@ const addresses = [
 
 // สินค้าตัวอย่าง — stock คือ "คงเหลือหลังขาย" (ตั้งให้บางตัวใกล้หมด/หมด เพื่อให้เห็นป้ายเตือน)
 const products = [
-  { sku: "TS-WHT-M", name: "เสื้อยืดคอกลม สีขาว ไซซ์ M", price: "199.00", stock: 42 },
-  { sku: "TS-BLK-L", name: "เสื้อยืดคอกลม สีดำ ไซซ์ L", price: "199.00", stock: 3 },
-  { sku: "HD-GRY-L", name: "เสื้อฮู้ด สีเทา ไซซ์ L", price: "590.00", stock: 12 },
-  { sku: "CAP-NVY", name: "หมวกแก๊ป สีกรม", price: "250.00", stock: 0 },
-  { sku: "BAG-TOTE", name: "กระเป๋าผ้าแคนวาส", price: "159.00", stock: 65 },
-  { sku: "MUG-CER", name: "แก้วมัคเซรามิก 350 มล.", price: "189.00", stock: 24 },
-  { sku: "BTL-STL", name: "กระบอกน้ำสแตนเลส 500 มล.", price: "349.00", stock: 5 },
-  { sku: "NB-A5", name: "สมุดโน้ต A5 ปกแข็ง", price: "89.00", stock: 120 },
-  { sku: "PEN-GEL3", name: "ปากกาเจล แพ็ก 3 ด้าม", price: "45.00", stock: 200 },
-  { sku: "STK-SET", name: "สติกเกอร์ไดคัท ชุด 10 ชิ้น", price: "69.00", stock: 2 },
-  { sku: "PHC-CLR", name: "เคสโทรศัพท์ใส", price: "129.00", stock: 38 },
-  { sku: "CBL-USBC", name: "สายชาร์จ USB-C 1 เมตร", price: "159.00", stock: 0 },
-  { sku: "SOCK-3P", name: "ถุงเท้าข้อสั้น แพ็ก 3 คู่", price: "99.00", stock: 54 },
-  { sku: "KEY-ACR", name: "พวงกุญแจอะคริลิก", price: "59.00", stock: 17 },
-  { sku: "UMB-FLD", name: "ร่มพับ กันยูวี", price: "299.00", stock: 8, isActive: false }, // เลิกขายแล้ว
+  { sku: "TS-WHT-M", name: "เสื้อยืดคอกลม สีขาว ไซซ์ M", stock: 42 },
+  { sku: "TS-BLK-L", name: "เสื้อยืดคอกลม สีดำ ไซซ์ L", stock: 3 },
+  { sku: "HD-GRY-L", name: "เสื้อฮู้ด สีเทา ไซซ์ L", stock: 12 },
+  { sku: "CAP-NVY", name: "หมวกแก๊ป สีกรม", stock: 0 },
+  { sku: "BAG-TOTE", name: "กระเป๋าผ้าแคนวาส", stock: 65 },
+  { sku: "MUG-CER", name: "แก้วมัคเซรามิก 350 มล.", stock: 24 },
+  { sku: "BTL-STL", name: "กระบอกน้ำสแตนเลส 500 มล.", stock: 5 },
+  { sku: "NB-A5", name: "สมุดโน้ต A5 ปกแข็ง", stock: 120 },
+  { sku: "PEN-GEL3", name: "ปากกาเจล แพ็ก 3 ด้าม", stock: 200 },
+  { sku: "STK-SET", name: "สติกเกอร์ไดคัท ชุด 10 ชิ้น", stock: 2 },
+  { sku: "PHC-CLR", name: "เคสโทรศัพท์ใส", stock: 38 },
+  { sku: "CBL-USBC", name: "สายชาร์จ USB-C 1 เมตร", stock: 0 },
+  { sku: "SOCK-3P", name: "ถุงเท้าข้อสั้น แพ็ก 3 คู่", stock: 54 },
+  { sku: "KEY-ACR", name: "พวงกุญแจอะคริลิก", stock: 17 },
+  { sku: "UMB-FLD", name: "ร่มพับ กันยูวี", stock: 8, isActive: false }, // เลิกขายแล้ว
 ];
 
 // สุ่มแบบกำหนดค่าเริ่มต้น — รันกี่ครั้งก็ได้ข้อมูลชุดเดิม
@@ -81,10 +81,6 @@ function trackingNumber(carrier: ShippingCarrier): string {
       return `SHIP${digits(8)}`;
   }
 }
-
-/** "199.00" → 19900 สตางค์ — คิดเงินเป็นจำนวนเต็ม ทศนิยมไม่เพี้ยน */
-const toSatang = (price: string) => Math.round(Number(price) * 100);
-const fromSatang = (satang: number) => (satang / 100).toFixed(2);
 
 async function main() {
   const reset = process.argv.includes("--reset");
@@ -133,20 +129,15 @@ async function main() {
       const items = [...chosen.values()].map((product) => ({
         productId: product.id,
         productName: product.name,
-        unitPrice: product.price.toFixed(2),
         quantity: random() < 0.75 ? 1 : 2 + Math.floor(random() * 2),
       }));
-      const totalSatang = items.reduce(
-        (sum, item) => sum + toSatang(item.unitPrice) * item.quantity,
-        0,
-      );
 
       const shipped = status === OrderStatus.SHIPPED;
       const carrier = shipped ? pick(carriers) : null;
       orders.push({
         customerName: pick(names),
         customerPhone: random() < 0.7 ? `08${digits(8)}` : null,
-        total: fromSatang(totalSatang),
+        total: (Math.round((150 + random() * 2850) * 100) / 100).toFixed(2), // คลังไม่มีราคา → สุ่มยอดรวม
         status,
         orderedAt,
         note: random() < 0.15 ? "ฝากไว้หน้าบ้าน" : null,

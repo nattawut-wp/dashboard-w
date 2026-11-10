@@ -8,7 +8,6 @@ export function productToFormDefaults(product: ProductRow): ProductFormDefaults 
   return {
     sku: product.sku,
     name: product.name,
-    price: product.price,
     lowStockThreshold: String(product.lowStockThreshold),
     stock: "",
   };
@@ -16,5 +15,5 @@ export function productToFormDefaults(product: ProductRow): ProductFormDefaults 
 
 /** ค่าเริ่มต้นของฟอร์มหน้าเพิ่มสินค้า */
 export function newProductFormDefaults(): ProductFormDefaults {
-  return { sku: "", name: "", price: "", lowStockThreshold: "5", stock: "0" };
+  return { sku: "", name: "", lowStockThreshold: "5", stock: "0" };
 }

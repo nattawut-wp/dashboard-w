@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatBaht } from "@/lib/orders/format";
 import type { ProductRow } from "@/lib/products/types";
 import { StockAmount } from "./stock-badge";
 
@@ -18,7 +17,6 @@ export function ProductList({ products }: { products: ProductRow[] }) {
             <TableRow>
               <TableHead className="w-36">รหัสสินค้า</TableHead>
               <TableHead>ชื่อสินค้า</TableHead>
-              <TableHead className="text-right">ราคา</TableHead>
               <TableHead>คงเหลือ</TableHead>
               <TableHead className="w-16 text-right">
                 <span className="sr-only">จัดการ</span>
@@ -33,7 +31,6 @@ export function ProductList({ products }: { products: ProductRow[] }) {
                   <span className="font-medium">{product.name}</span>
                   {!product.isActive && <InactiveBadge />}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">{formatBaht(product.price)}</TableCell>
                 <TableCell>
                   <StockAmount stock={product.stock} lowStockThreshold={product.lowStockThreshold} />
                 </TableCell>
@@ -55,10 +52,7 @@ export function ProductList({ products }: { products: ProductRow[] }) {
                   <span className="font-mono">{product.sku}</span>
                   {!product.isActive && <InactiveBadge />}
                 </div>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 font-medium">{product.name}</div>
-                  <div className="shrink-0 text-right font-semibold tabular-nums">{formatBaht(product.price)}</div>
-                </div>
+                <div className="font-medium">{product.name}</div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm text-muted-foreground">
                     คงเหลือ{" "}

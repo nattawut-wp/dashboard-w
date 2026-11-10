@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { firstErrorPerField } from "@/lib/auth/validation";
-import { moneyError, normalizeMoney } from "@/lib/money";
 
 // A–Z 0–9 และ - ขึ้นต้นด้วยตัวอักษร/ตัวเลข ยาว 1–30
 const SKU = /^[A-Z0-9][A-Z0-9-]{0,29}$/;
@@ -29,15 +28,6 @@ const updateSchema = z.object({
     .trim()
     .min(1, "กรุณากรอกชื่อสินค้า")
     .max(100, "ชื่อสินค้ายาวเกิน 100 ตัวอักษร"),
-  price: z
-    .string({ error: "กรุณากรอกราคา" })
-    .trim()
-    .min(1, "กรุณากรอกราคา")
-    .superRefine((value, ctx) => {
-      const error = moneyError(value.replace(/,/g, ""), "ราคา");
-      if (error) ctx.addIssue({ code: "custom", message: error });
-    })
-    .transform(normalizeMoney),
   lowStockThreshold: wholeNumber("เกณฑ์แจ้งเตือนต้องเป็นจำนวนเต็ม 0–100,000", 0, 100_000),
 });
 
@@ -47,7 +37,7 @@ const createSchema = updateSchema.extend({
   stock: wholeNumber("จำนวนเริ่มต้นต้องเป็นจำนวนเต็ม 0–1,000,000", 0, MAX_STOCK),
 });
 
-export const PRODUCT_FIELDS = ["sku", "name", "price", "lowStockThreshold", "stock"] as const;
+export const PRODUCT_FIELDS = ["sku", "name", "lowStockThreshold", "stock"] as const;
 
 export type ProductCreateData = z.output<typeof createSchema>;
 export type ProductUpdateData = z.output<typeof updateSchema>;
