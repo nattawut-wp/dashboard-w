@@ -39,3 +39,14 @@ export function buildHref(path: string, params: Record<string, string | null | u
   const text = query.toString();
   return text ? `${path}?${text}` : path;
 }
+
+/** ตัวเลขน้อยกว่านี้ไม่ใช้ค้นเบอร์โทร (ตัวเลขตัวเดียวตรงกับเกือบทุกเบอร์) */
+const MIN_PHONE_SEARCH_DIGITS = 3;
+
+/**
+ * ตัวเลขจากคำค้นสำหรับค้นเบอร์โทร ("081-234" → "081234") — ตัวเลขน้อยกว่า 3 ตัว → "" (ไม่ค้นเบอร์)
+ */
+export function phoneSearchDigits(q: string): string {
+  const digits = q.replace(/\D/g, "");
+  return digits.length >= MIN_PHONE_SEARCH_DIGITS ? digits : "";
+}
