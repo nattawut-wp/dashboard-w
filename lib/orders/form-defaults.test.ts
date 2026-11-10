@@ -13,6 +13,7 @@ describe("orderToFormDefaults (หน้าแก้ไข)", () => {
         orderedAt: new Date("2026-11-08T17:05:00Z"),
         note: null,
         shippingAddress: null,
+        paymentMethod: "COD",
       }),
     ).toEqual({
       customerName: "มาลี",
@@ -22,6 +23,7 @@ describe("orderToFormDefaults (หน้าแก้ไข)", () => {
       orderedAt: "2026-11-09T00:05",
       note: "",
       shippingAddress: "",
+      paymentMethod: "COD",
     });
   });
 
@@ -35,6 +37,7 @@ describe("orderToFormDefaults (หน้าแก้ไข)", () => {
       orderedAt: new Date("2026-11-08T17:05:00Z"),
       note: null,
       shippingAddress: "45 หมู่ 3\nนนทบุรี 11120",
+      paymentMethod: "TRANSFER",
     });
     expect(defaults.customerPhone).toBe("080-671-8527");
     expect(defaults.shippingAddress).toBe("45 หมู่ 3\nนนทบุรี 11120");
@@ -51,6 +54,7 @@ describe("newOrderFormDefaults (หน้าเพิ่ม)", () => {
       orderedAt: "2026-11-09T17:00",
       note: "",
       shippingAddress: "",
+      paymentMethod: "TRANSFER",
     });
   });
 });

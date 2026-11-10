@@ -8,7 +8,8 @@ describe("parseShippingListParams", () => {
       q: "สมชาย",
       page: 2,
     });
-    for (const tab of [undefined, "", "shipped", "PAID", "toString"]) {
+    expect(parseShippingListParams({ tab: "COD" }).tab).toBe("COD");
+    for (const tab of [undefined, "", "shipped", "PAID", "toString", "cod"]) {
       expect(parseShippingListParams({ tab })).toEqual({ tab: "PENDING", q: "", page: 1 });
     }
   });
@@ -19,5 +20,6 @@ describe("buildShippingHref", () => {
     expect(buildShippingHref({ tab: "PENDING", q: "", page: 1 })).toBe("/shipping");
     expect(buildShippingHref({ tab: "SHIPPED", q: "", page: 1 })).toBe("/shipping?tab=SHIPPED");
     expect(buildShippingHref({ tab: "SHIPPED", q: "kex", page: 3 })).toBe("/shipping?tab=SHIPPED&q=kex&page=3");
+    expect(buildShippingHref({ tab: "COD", q: "", page: 1 })).toBe("/shipping?tab=COD");
   });
 });

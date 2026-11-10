@@ -1,6 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { phoneSearchDigits } from "@/lib/list-params";
 import { paginate, type OrderListParams } from "./list-params";
 import type { OrderItemRow, OrderListRow, OrderRow, ProductOption } from "./types";
 
@@ -17,6 +18,7 @@ const select = {
   orderedAt: true,
   note: true,
   shippingAddress: true,
+  paymentMethod: true,
 } satisfies Prisma.OrderSelect;
 
 function toRow(order: Prisma.OrderGetPayload<{ select: typeof select }>): OrderRow {
@@ -24,7 +26,7 @@ function toRow(order: Prisma.OrderGetPayload<{ select: typeof select }>): OrderR
 }
 
 export async function listOrders({ q, status, page }: OrderListParams) {
-  const digits = q.replace(/\D/g, "");
+  const digits = phoneSearchDigits(q);
   const where: Prisma.OrderWhereInput = {
     ...(status && { status }),
     ...(q && {

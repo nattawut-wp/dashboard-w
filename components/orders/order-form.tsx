@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { SaveOrderState } from "@/app/(admin)/orders/actions";
+import { PAYMENT_METHODS, paymentMethodLabel } from "@/lib/orders/payment";
 import { ORDER_STATUSES, statusLabel } from "@/lib/orders/status";
 import type { OrderFormDefaults } from "@/lib/orders/form-defaults";
 import type { ProductOption } from "@/lib/orders/types";
@@ -102,6 +103,19 @@ export function OrderForm({
                 placeholder="0.00"
                 className="h-11 text-base tabular-nums"
               />
+            </FormField>
+
+            <FormField label="วิธีชำระเงิน" field="paymentMethod" error={error("paymentMethod")} required>
+              <select
+                {...fieldProps("paymentMethod")}
+                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-base aria-invalid:border-destructive"
+              >
+                {PAYMENT_METHODS.map((value) => (
+                  <option key={value} value={value}>
+                    {paymentMethodLabel(value)}
+                  </option>
+                ))}
+              </select>
             </FormField>
 
             <FormField label="สถานะ" field="status" error={error("status")} required>

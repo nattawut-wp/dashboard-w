@@ -2,6 +2,7 @@ import { z } from "zod";
 import { firstErrorPerField } from "@/lib/auth/validation";
 import { moneyError, normalizeMoney } from "@/lib/money";
 import { parseBangkokDateTimeInput } from "./datetime";
+import { PaymentMethod } from "@/generated/prisma/enums";
 import { ORDER_STATUSES } from "./status";
 
 // เบอร์มือถือ 10 หลัก (08x, 09x, 06x) หรือเบอร์บ้าน 9 หลัก (02x ...)
@@ -39,6 +40,7 @@ function orderSchema(now: Date) {
       })
       .transform(normalizeMoney),
     status: z.enum(ORDER_STATUSES, { error: "กรุณาเลือกสถานะ" }),
+    paymentMethod: z.enum(PaymentMethod, { error: "กรุณาเลือกวิธีชำระเงิน" }),
     orderedAt: z.preprocess(
       (value) => parseBangkokDateTimeInput(typeof value === "string" ? value : null),
       z
@@ -59,6 +61,7 @@ export const ORDER_FIELDS = [
   "orderedAt",
   "note",
   "shippingAddress",
+  "paymentMethod",
 ] as const;
 
 export type OrderFormData = z.output<ReturnType<typeof orderSchema>>;

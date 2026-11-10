@@ -13,6 +13,7 @@ function form(overrides: Record<string, unknown> = {}) {
     orderedAt: "2026-11-09T14:30",
     note: "ฝากไว้หน้าบ้าน",
     shippingAddress: "99/12 ถ.สุขุมวิท กรุงเทพฯ 10110",
+    paymentMethod: "TRANSFER",
     ...overrides,
   };
 }
@@ -29,6 +30,7 @@ describe("parseOrderForm", () => {
         orderedAt: new Date("2026-11-09T07:30:00Z"),
         note: "ฝากไว้หน้าบ้าน",
         shippingAddress: "99/12 ถ.สุขุมวิท กรุงเทพฯ 10110",
+        paymentMethod: "TRANSFER",
       },
     });
   });
@@ -188,6 +190,19 @@ describe("parseOrderForm", () => {
         success: false,
         errors: { shippingAddress: "ที่อยู่จัดส่งยาวเกิน 500 ตัวอักษร" },
       });
+    });
+  });
+
+  describe("วิธีชำระเงิน", () => {
+    it("โอนเงิน / เก็บเงินปลายทาง ผ่าน, อื่นๆ / ว่าง / null / ตัวเล็ก → 'กรุณาเลือกวิธีชำระเงิน'", () => {
+      const result = parseOrderForm(form({ paymentMethod: "COD" }), NOW);
+      expect(result.success && result.data.paymentMethod).toBe("COD");
+      for (const paymentMethod of ["CASH", "", null, "cod"]) {
+        expect(parseOrderForm(form({ paymentMethod }), NOW)).toEqual({
+          success: false,
+          errors: { paymentMethod: "กรุณาเลือกวิธีชำระเงิน" },
+        });
+      }
     });
   });
 

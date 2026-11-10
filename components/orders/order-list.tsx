@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Pencil } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -69,7 +70,10 @@ export function OrderList({ orders }: { orders: OrderListRow[] }) {
                 </TableCell>
                 <TableCell className="pl-6 text-muted-foreground">{formatThaiDateTime(order.orderedAt)}</TableCell>
                 <TableCell>
-                  <StatusBadge status={order.status} />
+                  <span className="inline-flex flex-wrap items-center gap-1">
+                    <StatusBadge status={order.status} />
+                    {order.paymentMethod === "COD" && <CodBadge />}
+                  </span>
                 </TableCell>
                 <TableCell className="text-right font-medium tabular-nums">{formatBaht(order.total)}</TableCell>
                 <TableCell>
@@ -110,7 +114,10 @@ export function OrderList({ orders }: { orders: OrderListRow[] }) {
                 </div>
                 <OrderItemsLines items={order.items} />
                 <div className="flex items-center justify-between gap-2">
-                  <StatusBadge status={order.status} />
+                  <span className="inline-flex flex-wrap items-center gap-1">
+                    <StatusBadge status={order.status} />
+                    {order.paymentMethod === "COD" && <CodBadge />}
+                  </span>
                   <OrderActions order={order} />
                 </div>
               </CardContent>
@@ -151,5 +158,14 @@ function OrderItemsLines({ items }: { items: OrderListRow["items"] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** ป้าย "COD" ข้างสถานะ — บอกว่าเป็นออร์เดอร์เก็บเงินปลายทาง */
+function CodBadge() {
+  return (
+    <Badge variant="outline" className="font-medium" title="เก็บเงินปลายทาง">
+      COD
+    </Badge>
   );
 }

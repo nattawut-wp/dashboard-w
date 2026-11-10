@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getCurrentUser } from "@/lib/auth/session";
 import type { SearchParams } from "@/lib/list-params";
+import { formatBaht } from "@/lib/orders/format";
 import { cn } from "@/lib/utils";
 import { countShipments, listShipments } from "@/lib/shipping/data";
 import {
@@ -35,14 +36,20 @@ export default function ShippingPage({ searchParams }: { searchParams: Promise<S
 async function ShippingContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await getCurrentUser();
   const params = parseShippingListParams(await searchParams);
-  const [{ orders, totalItems, page, totalPages }, counts] = await Promise.all([
+  const [{ orders, totalItems, page, totalPages }, { counts, codOutstanding }] = await Promise.all([
     listShipments(params),
     countShipments(),
   ]);
 
   return (
     <div className="space-y-4">
-      <Tabs current={params.tab} counts={{ PENDING: counts.pending, SHIPPED: counts.shipped }} />
+      <Tabs current={params.tab} counts={counts} />
+      {params.tab === "COD" && counts.COD > 0 && (
+        <p className="text-sm">
+          ยอดเงินปลายทางที่ขนส่งยังไม่โอนให้:{" "}
+          <span className="font-semibold tabular-nums">{formatBaht(codOutstanding)}</span>
+        </p>
+      )}
       <SearchForm params={params} />
       {params.q && (
         <p className="text-sm text-muted-foreground">พบ {totalItems.toLocaleString("th-TH")} รายการ</p>
@@ -53,9 +60,7 @@ async function ShippingContent({ searchParams }: { searchParams: Promise<SearchP
           <CardContent className="py-10 text-center text-muted-foreground">
             {params.q
               ? "ไม่พบออร์เดอร์ที่ตรงกับการค้นหา"
-              : params.tab === "PENDING"
-                ? "ไม่มีออร์เดอร์รอส่ง 🎉"
-                : "ยังไม่มีออร์เดอร์ที่ส่งแล้ว"}
+              : EMPTY_MESSAGES[params.tab]}
           </CardContent>
         </Card>
       ) : (
@@ -77,22 +82,28 @@ async function ShippingContent({ searchParams }: { searchParams: Promise<SearchP
   );
 }
 
-const TAB_LABELS: Record<ShippingTab, string> = { PENDING: "รอส่ง", SHIPPED: "ส่งแล้ว" };
+const TAB_LABELS: Record<ShippingTab, string> = { PENDING: "รอส่ง", SHIPPED: "ส่งแล้ว", COD: "รอเงิน COD" };
+
+const EMPTY_MESSAGES: Record<ShippingTab, string> = {
+  PENDING: "ไม่มีออร์เดอร์รอส่ง 🎉",
+  SHIPPED: "ยังไม่มีออร์เดอร์ที่ส่งแล้ว",
+  COD: "ไม่มีเงินปลายทางค้างรับ 🎉",
+};
 
 function Tabs({ current, counts }: { current: ShippingTab; counts: Record<ShippingTab, number> }) {
   return (
-    <nav aria-label="สถานะการจัดส่ง" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 sm:inline-grid sm:w-80">
+    <nav aria-label="สถานะการจัดส่ง" className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1 sm:inline-grid sm:w-[30rem]">
       {(Object.keys(TAB_LABELS) as ShippingTab[]).map((tab) => (
         <Link
           key={tab}
           href={buildShippingHref({ tab, q: "", page: 1 })}
           aria-current={tab === current ? "page" : undefined}
           className={cn(
-            "rounded-md px-3 py-2 text-center text-sm font-medium",
+            "rounded-md px-2 py-2 text-center text-sm font-medium",
             tab === current ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          {TAB_LABELS[tab]} <span className="tabular-nums">({counts[tab].toLocaleString("th-TH")})</span>
+          {TAB_LABELS[tab]} <span className="whitespace-nowrap tabular-nums">({counts[tab].toLocaleString("th-TH")})</span>
         </Link>
       ))}
     </nav>
@@ -103,7 +114,7 @@ function Tabs({ current, counts }: { current: ShippingTab; counts: Record<Shippi
 function SearchForm({ params }: { params: ShippingListParams }) {
   return (
     <form action="/shipping" className="flex gap-2">
-      {params.tab === "SHIPPED" && <input type="hidden" name="tab" value="SHIPPED" />}
+      {params.tab !== "PENDING" && <input type="hidden" name="tab" value={params.tab} />}
       <label className="sr-only" htmlFor="q">
         ค้นหา
       </label>

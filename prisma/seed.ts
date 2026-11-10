@@ -4,7 +4,7 @@
 // ห้ามรันกับฐานข้อมูล production
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { OrderStatus, PrismaClient, ShippingCarrier } from "../generated/prisma/client";
+import { OrderStatus, PaymentMethod, PrismaClient, ShippingCarrier } from "../generated/prisma/client";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DIRECT_URL }),
@@ -132,22 +132,33 @@ async function main() {
         quantity: random() < 0.75 ? 1 : 2 + Math.floor(random() * 2),
       }));
 
-      const shipped = status === OrderStatus.SHIPPED;
+      // ~30% เก็บเงินปลายทาง — COD ไม่มีสถานะ "ชำระแล้ว" ก่อนส่ง (เก็บเงินตอนส่ง)
+      const paymentMethod = random() < 0.3 ? PaymentMethod.COD : PaymentMethod.TRANSFER;
+      const finalStatus = paymentMethod === PaymentMethod.COD && status === OrderStatus.PAID ? OrderStatus.PENDING : status;
+      const shipped = finalStatus === OrderStatus.SHIPPED;
       const carrier = shipped ? pick(carriers) : null;
+      const shippedAt = shipped
+        ? new Date(Math.min(now, orderedAt.getTime() + 4 * HOUR + Math.floor(random() * 26 * HOUR)))
+        : null;
+      // COD ที่ส่งเกิน 4 วันแล้ว → ขนส่งโอนเงินให้แล้ว (3–4 วันหลังส่ง) / ส่งไม่นาน → ยังรอเงิน
+      const codCollectedAt =
+        paymentMethod === PaymentMethod.COD && shippedAt && now - shippedAt.getTime() > 4 * DAY
+          ? new Date(shippedAt.getTime() + 3 * DAY + Math.floor(random() * DAY))
+          : null;
       orders.push({
         customerName: pick(names),
         customerPhone: random() < 0.7 ? `08${digits(8)}` : null,
         total: (Math.round((150 + random() * 2850) * 100) / 100).toFixed(2), // คลังไม่มีราคา → สุ่มยอดรวม
-        status,
+        status: finalStatus,
+        paymentMethod,
+        codCollectedAt,
         orderedAt,
         note: random() < 0.15 ? "ฝากไว้หน้าบ้าน" : null,
         // ส่งแล้วต้องมีที่อยู่เสมอ ที่เหลือบางออร์เดอร์ยังไม่ได้กรอก
         shippingAddress: shipped || random() < 0.85 ? pick(addresses) : null,
         shippingCarrier: carrier,
         trackingNumber: carrier ? trackingNumber(carrier) : null,
-        shippedAt: shipped
-          ? new Date(Math.min(now, orderedAt.getTime() + 4 * HOUR + Math.floor(random() * 26 * HOUR)))
-          : null,
+        shippedAt,
         items,
       });
     }
