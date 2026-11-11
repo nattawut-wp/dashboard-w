@@ -2,12 +2,17 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { SHOP_TIME_ZONE } from "@/lib/orders/format";
+import { formatOrderNumber, SHOP_TIME_ZONE } from "@/lib/orders/format";
 import { monthGrid, shiftMonth } from "@/lib/shipping/calendar";
+import type { CalendarOrder } from "@/lib/shipping/data";
 import { buildShippingHref, type ShippingListParams } from "@/lib/shipping/list-params";
 import { cn } from "@/lib/utils";
 
 const WEEKDAYS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+
+/** ชื่อที่โชว์ในช่อง: มือถือ 2 ชื่อ, จอใหญ่ 3 ชื่อ — ที่เหลือเป็น "+N" */
+const MOBILE_NAMES = 2;
+const DESKTOP_NAMES = 3;
 
 const monthLabel = new Intl.DateTimeFormat("th-TH", { timeZone: SHOP_TIME_ZONE, month: "long", year: "numeric" });
 const dayLabel = new Intl.DateTimeFormat("th-TH", { timeZone: SHOP_TIME_ZONE, dateStyle: "long" });
@@ -22,46 +27,51 @@ type Props = {
   month: string;
   /** วันนี้ตามเวลาไทย "YYYY-MM-DD" */
   today: string;
-  /** จำนวนออร์เดอร์ต่อวันในเดือนนี้ */
-  counts: Record<string, number>;
-  /** "วันที่สั่ง" หรือ "วันที่ส่ง" — บอกว่าตัวเลขนับจากอะไร */
+  /** ออร์เดอร์ของแต่ละวันในเดือนนี้ */
+  days: Record<string, CalendarOrder[]>;
+  /** "วันที่สั่ง" หรือ "วันที่ส่ง" — บอกว่าออร์เดอร์ถูกวางไว้วันไหน */
   dateLabel: string;
 };
 
 /**
- * ปฏิทินบนหน้าจัดส่ง — ทุกช่องเป็นลิงก์ธรรมดา (ใช้ได้แม้ JavaScript ยังไม่โหลด)
- * กดวัน = กรองเฉพาะวันนั้น, กดวันเดิมซ้ำ = ดูทุกวัน
+ * ปฏิทินรายเดือนแบบ Google Calendar — ในช่องวันมีชื่อลูกค้า
+ * ทุกช่องเป็นลิงก์ธรรมดา (ใช้ได้แม้ JavaScript ยังไม่โหลด): กดวัน = ดูเฉพาะวันนั้น, กดซ้ำ = ดูทุกวัน
  */
-export function ShippingCalendar({ params, month, today, counts, dateLabel }: Props) {
+export function ShippingCalendar({ params, month, today, days, dateLabel }: Props) {
   // เปลี่ยนวัน/เดือนแล้วกลับไปหน้า 1 เสมอ
   const base = { ...params, page: 1 };
   const monthHref = (target: string) => buildShippingHref({ ...base, month: target });
 
   return (
-    <Card className="w-full sm:max-w-md">
-      <CardContent className="space-y-2 px-3 sm:px-4">
-        <div className="flex items-center justify-between gap-2">
+    <Card className="w-full gap-2 py-3">
+      <CardContent className="space-y-2 px-2 sm:px-4">
+        <div className="flex items-center gap-1">
           <Button asChild variant="ghost" size="icon" aria-label="เดือนก่อน">
             <Link href={monthHref(shiftMonth(month, -1))}>
               <ChevronLeft className="size-5" />
             </Link>
           </Button>
-          <div className="text-center">
-            <h2 className="font-semibold">{monthLabel.format(noonOf(`${month}-01`))}</h2>
-            <p className="text-xs text-muted-foreground">ตัวเลข = จำนวนออร์เดอร์ตาม{dateLabel}</p>
-          </div>
           <Button asChild variant="ghost" size="icon" aria-label="เดือนถัดไป">
             <Link href={monthHref(shiftMonth(month, 1))}>
               <ChevronRight className="size-5" />
             </Link>
           </Button>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-semibold">{monthLabel.format(noonOf(`${month}-01`))}</h2>
+            <p className="truncate text-xs text-muted-foreground">วางตาม{dateLabel} · กดวันเพื่อดูรายการ</p>
+          </div>
+          {month !== today.slice(0, 7) && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={buildShippingHref({ ...base, month: undefined, date: undefined })}>วันนี้</Link>
+            </Button>
+          )}
         </div>
 
-        <table className="w-full table-fixed border-separate border-spacing-0.5 text-center">
+        <table className="w-full table-fixed border-collapse">
           <thead>
             <tr>
               {WEEKDAYS.map((day) => (
-                <th key={day} scope="col" className="py-1 text-xs font-medium text-muted-foreground">
+                <th key={day} scope="col" className="pb-1 text-xs font-medium text-muted-foreground">
                   {day}
                 </th>
               ))}
@@ -71,16 +81,18 @@ export function ShippingCalendar({ params, month, today, counts, dateLabel }: Pr
             {monthGrid(month).map((week, w) => (
               <tr key={w}>
                 {week.map((dateKey, d) => (
-                  <td key={dateKey ?? `empty-${w}-${d}`} className="p-0">
-                    {dateKey && (
+                  <td key={dateKey ?? `empty-${w}-${d}`} className="border p-0 align-top">
+                    {dateKey ? (
                       <DayCell
                         dateKey={dateKey}
-                        count={counts[dateKey] ?? 0}
+                        orders={days[dateKey] ?? []}
                         selected={dateKey === params.date}
                         isToday={dateKey === today}
                         // กดวันที่เลือกอยู่ซ้ำ = ยกเลิกการกรอง
                         href={buildShippingHref({ ...base, month, date: dateKey === params.date ? undefined : dateKey })}
                       />
+                    ) : (
+                      <div className="min-h-20 bg-muted/40 sm:min-h-24" />
                     )}
                   </td>
                 ))}
@@ -88,14 +100,6 @@ export function ShippingCalendar({ params, month, today, counts, dateLabel }: Pr
             ))}
           </tbody>
         </table>
-
-        {month !== today.slice(0, 7) && (
-          <div className="flex justify-center">
-            <Button asChild variant="outline" size="sm">
-              <Link href={buildShippingHref({ ...base, month: undefined, date: undefined })}>ไปเดือนนี้</Link>
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -103,43 +107,59 @@ export function ShippingCalendar({ params, month, today, counts, dateLabel }: Pr
 
 function DayCell({
   dateKey,
-  count,
+  orders,
   selected,
   isToday,
   href,
 }: {
   dateKey: string;
-  count: number;
+  orders: CalendarOrder[];
   selected: boolean;
   isToday: boolean;
   href: string;
 }) {
   const day = Number(dateKey.slice(8));
+  const count = orders.length;
   const label = `${dayLabel.format(noonOf(dateKey))} ${count > 0 ? `${count} ออร์เดอร์` : "ไม่มีออร์เดอร์"}`;
+  const mobileMore = count - MOBILE_NAMES;
+  const desktopMore = count - DESKTOP_NAMES;
+
   return (
     <Link
       href={href}
       aria-label={label}
       aria-current={selected ? "date" : undefined}
       className={cn(
-        "flex h-11 flex-col items-center justify-center rounded-md text-sm tabular-nums leading-none",
-        selected
-          ? "bg-primary text-primary-foreground"
-          : count > 0
-            ? "hover:bg-muted"
-            : "text-muted-foreground hover:bg-muted",
-        isToday && !selected && "ring-1 ring-primary ring-inset",
+        "flex min-h-20 flex-col gap-0.5 p-0.5 sm:min-h-24 sm:p-1",
+        selected ? "bg-primary/10 ring-2 ring-primary ring-inset" : "hover:bg-muted/60",
       )}
     >
-      <span className={cn(isToday && "font-semibold")}>{day}</span>
       <span
         className={cn(
-          "mt-1 h-3 text-[10px] font-medium",
-          selected ? "text-primary-foreground" : "text-primary",
+          "mx-auto flex size-6 items-center justify-center rounded-full text-xs tabular-nums sm:mx-0",
+          isToday ? "bg-primary font-semibold text-primary-foreground" : count === 0 && "text-muted-foreground",
         )}
       >
-        {count > 0 ? count : ""}
+        {day}
       </span>
+      {orders.slice(0, DESKTOP_NAMES).map((order, i) => (
+        <span
+          key={order.id}
+          title={`${formatOrderNumber(order.id)} ${order.customerName}`}
+          className={cn(
+            "truncate rounded bg-primary/15 px-1 text-[10px] leading-4 text-primary sm:text-xs sm:leading-5",
+            i >= MOBILE_NAMES && "hidden sm:block",
+          )}
+        >
+          {order.customerName}
+        </span>
+      ))}
+      {mobileMore > 0 && (
+        <span className="px-1 text-[10px] font-medium text-muted-foreground sm:hidden">+{mobileMore}</span>
+      )}
+      {desktopMore > 0 && (
+        <span className="hidden px-1 text-xs font-medium text-muted-foreground sm:block">อีก {desktopMore}</span>
+      )}
     </Link>
   );
 }
