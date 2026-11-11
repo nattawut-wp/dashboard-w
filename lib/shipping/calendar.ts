@@ -62,18 +62,19 @@ export function bangkokMonthRange(monthKey: string): { gte: Date; lt: Date } {
   return { gte: bangkokMidnight(`${monthKey}-01`), lt: bangkokMidnight(`${shiftMonth(monthKey, 1)}-01`) };
 }
 
-/** จำนวนออร์เดอร์ต่อวัน (เวลาไทย) → { "2026-11-11": 3 } — ตัวเลขเล็กๆ ใต้วันที่ในปฏิทิน */
-export function countByBangkokDay(dates: (Date | null)[]): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const date of dates) {
-    if (!date) continue;
-    const key = bangkokDateKey(date);
-    counts[key] = (counts[key] ?? 0) + 1;
-  }
-  return counts;
-}
 
 /** เดือนที่ปฏิทินแสดง: ?month= → เดือนของวันที่เลือก → เดือนนี้ (เวลาไทย) */
 export function visibleMonth({ month, date }: { month?: string; date?: string }, now: Date): string {
   return month ?? date?.slice(0, 7) ?? bangkokDateKey(now).slice(0, 7);
+}
+
+/** จัดกลุ่มตามวัน (เวลาไทย) → { "2026-11-11": [ออร์เดอร์...] } — ชื่อลูกค้าในช่องปฏิทิน */
+export function groupByBangkokDay<T>(items: T[], dateOf: (item: T) => Date | null): Record<string, T[]> {
+  const groups: Record<string, T[]> = {};
+  for (const item of items) {
+    const date = dateOf(item);
+    if (!date) continue;
+    (groups[bangkokDateKey(date)] ??= []).push(item);
+  }
+  return groups;
 }
