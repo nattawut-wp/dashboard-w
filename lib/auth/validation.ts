@@ -18,6 +18,12 @@ export const passwordSchema = z
   .min(1, "กรุณากรอกรหัสผ่าน")
   .max(PASSWORD_MAX_LENGTH, "รหัสผ่านยาวเกินไป");
 
+// รหัสผ่านตอนสร้างบัญชีต้องยาวพอ (ตอน login ไม่บังคับ — แค่บอกว่ารหัสผิด)
+export const newPasswordSchema = passwordSchema.min(
+  PASSWORD_MIN_LENGTH,
+  `รหัสผ่านต้องยาวอย่างน้อย ${PASSWORD_MIN_LENGTH} ตัวอักษร`,
+);
+
 const loginSchema = z.object({ email: emailSchema, password: passwordSchema });
 
 export type LoginInput = z.infer<typeof loginSchema>;

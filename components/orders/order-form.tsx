@@ -5,14 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { FormField } from "@/components/admin/form-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { SaveOrderState } from "@/app/(admin)/orders/actions";
+import { PAYMENT_METHODS, paymentMethodLabel } from "@/lib/orders/payment";
 import { ORDER_STATUSES, statusLabel } from "@/lib/orders/status";
 import type { OrderFormDefaults } from "@/lib/orders/form-defaults";
+import type { ProductOption } from "@/lib/orders/types";
+import { OrderItemsField } from "./order-items-field";
 import type { ORDER_FIELDS } from "@/lib/orders/validation";
 
 type Field = (typeof ORDER_FIELDS)[number];
@@ -20,12 +23,24 @@ type Field = (typeof ORDER_FIELDS)[number];
 type Props = {
   action: (prev: SaveOrderState, formData: FormData) => Promise<SaveOrderState>;
   defaults: OrderFormDefaults;
+  /** สินค้าให้เลือก + รายการเดิม + จำนวนที่ออร์เดอร์นี้จองไว้ (หน้าแก้ไข) */
+  products: ProductOption[];
+  defaultItems?: { productId: number; quantity: number }[];
+  reserved?: Record<number, number>;
   /** วันเวลาปัจจุบัน (เวลาไทย) — ใช้จำกัดช่องวันที่ไม่ให้เลือกอนาคต */
   maxOrderedAt: string;
   submitLabel: string;
 };
 
-export function OrderForm({ action, defaults, maxOrderedAt, submitLabel }: Props) {
+export function OrderForm({
+  action,
+  defaults,
+  products,
+  defaultItems = [],
+  reserved = {},
+  maxOrderedAt,
+  submitLabel,
+}: Props) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(action, {});
 
@@ -59,12 +74,19 @@ export function OrderForm({ action, defaults, maxOrderedAt, submitLabel }: Props
             </p>
           )}
 
-          <FieldBlock label="ชื่อลูกค้า" field="customerName" error={error("customerName")} required>
+          <FormField label="ชื่อลูกค้า" field="customerName" error={error("customerName")} required>
             <Input {...fieldProps("customerName")} autoComplete="off" maxLength={100} className="h-11 text-base" />
-          </FieldBlock>
+          </FormField>
+
+          <OrderItemsField
+            products={products}
+            defaultItems={defaultItems}
+            reserved={reserved}
+            error={state.errors?.items}
+          />
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <FieldBlock label="เบอร์โทร" field="customerPhone" error={error("customerPhone")} hint="ไม่บังคับ">
+            <FormField label="เบอร์โทร" field="customerPhone" error={error("customerPhone")} hint="ไม่บังคับ">
               <Input
                 {...fieldProps("customerPhone")}
                 type="tel"
@@ -72,18 +94,31 @@ export function OrderForm({ action, defaults, maxOrderedAt, submitLabel }: Props
                 placeholder="0812345678"
                 className="h-11 text-base"
               />
-            </FieldBlock>
+            </FormField>
 
-            <FieldBlock label="ยอดรวม (บาท)" field="total" error={error("total")} required>
+            <FormField label="ยอดรวม (บาท)" field="total" error={error("total")} required>
               <Input
                 {...fieldProps("total")}
                 inputMode="decimal"
                 placeholder="0.00"
                 className="h-11 text-base tabular-nums"
               />
-            </FieldBlock>
+            </FormField>
 
-            <FieldBlock label="สถานะ" field="status" error={error("status")} required>
+            <FormField label="วิธีชำระเงิน" field="paymentMethod" error={error("paymentMethod")} required>
+              <select
+                {...fieldProps("paymentMethod")}
+                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-base aria-invalid:border-destructive"
+              >
+                {PAYMENT_METHODS.map((value) => (
+                  <option key={value} value={value}>
+                    {paymentMethodLabel(value)}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField label="สถานะ" field="status" error={error("status")} required>
               <select
                 {...fieldProps("status")}
                 className="h-11 w-full rounded-lg border border-input bg-background px-3 text-base aria-invalid:border-destructive"
@@ -94,16 +129,27 @@ export function OrderForm({ action, defaults, maxOrderedAt, submitLabel }: Props
                   </option>
                 ))}
               </select>
-            </FieldBlock>
+            </FormField>
 
-            <FieldBlock label="วันเวลาที่สั่ง" field="orderedAt" error={error("orderedAt")} required>
+            <FormField label="วันเวลาที่สั่ง" field="orderedAt" error={error("orderedAt")} required>
               <Input {...fieldProps("orderedAt")} type="datetime-local" max={maxOrderedAt} className="h-11 text-base" />
-            </FieldBlock>
+            </FormField>
           </div>
 
-          <FieldBlock label="หมายเหตุ" field="note" error={error("note")} hint="ไม่บังคับ">
+          <FormField label="ที่อยู่จัดส่ง" field="shippingAddress" error={error("shippingAddress")} hint="ไม่บังคับ — ต้องมีก่อนส่งของ">
+            <Textarea
+              {...fieldProps("shippingAddress")}
+              rows={3}
+              maxLength={500}
+              autoComplete="street-address"
+              placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด รหัสไปรษณีย์"
+              className="text-base"
+            />
+          </FormField>
+
+          <FormField label="หมายเหตุ" field="note" error={error("note")} hint="ไม่บังคับ">
             <Textarea {...fieldProps("note")} rows={3} maxLength={500} className="text-base" />
-          </FieldBlock>
+          </FormField>
 
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button asChild variant="outline" size="lg" className="h-11">
@@ -117,37 +163,5 @@ export function OrderForm({ action, defaults, maxOrderedAt, submitLabel }: Props
         </form>
       </CardContent>
     </Card>
-  );
-}
-
-function FieldBlock({
-  label,
-  field,
-  error,
-  hint,
-  required,
-  children,
-}: {
-  label: string;
-  field: Field;
-  error?: string;
-  hint?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={field}>
-        {label}
-        {required && <span className="text-destructive" aria-hidden> *</span>}
-        {hint && <span className="font-normal text-muted-foreground"> ({hint})</span>}
-      </Label>
-      {children}
-      {error && (
-        <p id={`${field}-error`} className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-    </div>
   );
 }

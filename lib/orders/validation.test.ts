@@ -12,6 +12,8 @@ function form(overrides: Record<string, unknown> = {}) {
     status: "PAID",
     orderedAt: "2026-11-09T14:30",
     note: "ฝากไว้หน้าบ้าน",
+    shippingAddress: "99/12 ถ.สุขุมวิท กรุงเทพฯ 10110",
+    paymentMethod: "TRANSFER",
     ...overrides,
   };
 }
@@ -27,6 +29,8 @@ describe("parseOrderForm", () => {
         status: "PAID",
         orderedAt: new Date("2026-11-09T07:30:00Z"),
         note: "ฝากไว้หน้าบ้าน",
+        shippingAddress: "99/12 ถ.สุขุมวิท กรุงเทพฯ 10110",
+        paymentMethod: "TRANSFER",
       },
     });
   });
@@ -169,6 +173,36 @@ describe("parseOrderForm", () => {
         success: false,
         errors: { note: "หมายเหตุยาวเกิน 500 ตัวอักษร" },
       });
+    });
+  });
+
+  describe("ที่อยู่จัดส่ง", () => {
+    it("ไม่บังคับ: ว่าง / null → null, ตัดช่องว่างหน้า-หลัง, ขึ้นบรรทัดใหม่ได้, 500 ตัวผ่าน / 501 ตัว → 'ที่อยู่จัดส่งยาวเกิน 500 ตัวอักษร'", () => {
+      const parse = (shippingAddress: unknown) => parseOrderForm(form({ shippingAddress }), NOW);
+      for (const shippingAddress of ["", "   ", null]) {
+        const result = parse(shippingAddress);
+        expect(result.success && result.data.shippingAddress).toBeNull();
+      }
+      const multiLine = parse("  45 หมู่ 3\nนนทบุรี 11120  ");
+      expect(multiLine.success && multiLine.data.shippingAddress).toBe("45 หมู่ 3\nนนทบุรี 11120");
+      expect(parse("ก".repeat(500)).success).toBe(true);
+      expect(parse("ก".repeat(501))).toEqual({
+        success: false,
+        errors: { shippingAddress: "ที่อยู่จัดส่งยาวเกิน 500 ตัวอักษร" },
+      });
+    });
+  });
+
+  describe("วิธีชำระเงิน", () => {
+    it("โอนเงิน / เก็บเงินปลายทาง ผ่าน, อื่นๆ / ว่าง / null / ตัวเล็ก → 'กรุณาเลือกวิธีชำระเงิน'", () => {
+      const result = parseOrderForm(form({ paymentMethod: "COD" }), NOW);
+      expect(result.success && result.data.paymentMethod).toBe("COD");
+      for (const paymentMethod of ["CASH", "", null, "cod"]) {
+        expect(parseOrderForm(form({ paymentMethod }), NOW)).toEqual({
+          success: false,
+          errors: { paymentMethod: "กรุณาเลือกวิธีชำระเงิน" },
+        });
+      }
     });
   });
 

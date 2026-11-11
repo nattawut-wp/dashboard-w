@@ -62,7 +62,9 @@ export function DeleteOrderButton({ orderId, redirectTo, showLabel = false }: Pr
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>ต้องการลบออร์เดอร์ {number} ใช่ไหม?</AlertDialogTitle>
-          <AlertDialogDescription>ลบแล้วกู้คืนไม่ได้ ยอดของออร์เดอร์นี้จะหายไปจากหน้าภาพรวมด้วย</AlertDialogDescription>
+          <AlertDialogDescription>
+            ลบแล้วกู้คืนไม่ได้ สินค้าในออร์เดอร์จะถูกคืนเข้าคลัง และยอดจะหายไปจากหน้าภาพรวมด้วย
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>ยกเลิก</AlertDialogCancel>

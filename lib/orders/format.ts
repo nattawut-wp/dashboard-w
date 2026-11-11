@@ -24,6 +24,21 @@ export function formatOrderNumber(id: number): string {
   return `#${String(id).padStart(6, "0")}`;
 }
 
+/**
+ * ใส่ขีดให้อ่านง่าย (ฐานข้อมูลเก็บตัวเลขล้วน เพื่อให้ค้นหาเบอร์ได้)
+ * มือถือ 0806718527 → 080-671-8527 / เบอร์บ้าน 021234567 → 02-123-4567
+ * รูปแบบอื่นแสดงตามที่เก็บไว้
+ */
+export function formatThaiPhone(phone: string | null | undefined): string {
+  const value = phone?.trim();
+  if (!value) return "—";
+  const mobile = value.match(/^(0\d{2})(\d{3})(\d{4})$/);
+  if (mobile) return mobile.slice(1).join("-");
+  const landline = value.match(/^(0\d)(\d{3})(\d{4})$/);
+  if (landline) return landline.slice(1).join("-");
+  return value;
+}
+
 /** ยอดเงินรับได้ทั้ง number, ข้อความตัวเลข และ Prisma.Decimal (มี toString) */
 export type MoneyLike = number | string | { toString(): string };
 

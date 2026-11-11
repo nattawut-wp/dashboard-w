@@ -1,3 +1,4 @@
+import type { PaymentMethod } from "@/generated/prisma/enums";
 import type { OrderStatus } from "./status";
 
 /** ออร์เดอร์ในรูปที่ส่งให้หน้าเว็บได้ (ยอดเงินเป็นข้อความ เพราะ Decimal ส่งเข้า Client Component ไม่ได้) */
@@ -9,4 +10,15 @@ export type OrderRow = {
   status: OrderStatus;
   orderedAt: Date;
   note: string | null;
+  shippingAddress: string | null;
+  paymentMethod: PaymentMethod;
 };
+
+/** สินค้า 1 แถวในออร์เดอร์ (ชื่อ ณ ตอนที่ขาย) */
+export type OrderItemRow = { productId: number; productName: string; quantity: number };
+
+/** ตัวเลือกสินค้าในฟอร์มออร์เดอร์ */
+export type ProductOption = { id: number; sku: string; name: string; stock: number; isActive: boolean };
+
+/** ออร์เดอร์ในหน้ารายการ — มีชื่อสินค้าและจำนวน (ไว้สรุป "ซื้ออะไร") */
+export type OrderListRow = OrderRow & { items: { productName: string; quantity: number }[] };

@@ -1,31 +1,12 @@
 import { z } from "zod";
 import { firstErrorPerField } from "@/lib/auth/validation";
+import { moneyError, normalizeMoney } from "@/lib/money";
 import { parseBangkokDateTimeInput } from "./datetime";
+import { PaymentMethod } from "@/generated/prisma/enums";
 import { ORDER_STATUSES } from "./status";
 
 // เบอร์มือถือ 10 หลัก (08x, 09x, 06x) หรือเบอร์บ้าน 9 หลัก (02x ...)
 const THAI_PHONE = /^0\d{8,9}$/;
-
-// ตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง (ไม่รับ 1e5, .5, 12.)
-const MONEY = /^\d+(\.\d{1,2})?$/;
-const MAX_WHOLE_DIGITS = 10; // ตรงกับ total Decimal(12, 2) ใน prisma/schema.prisma
-
-function moneyError(value: string): string | null {
-  // ติดลบที่รูปแบบถูก → บอกว่าต้องมากกว่า 0 (ชัดกว่าบอกว่ารูปแบบผิด)
-  if (value.startsWith("-") && MONEY.test(value.slice(1))) return "ยอดรวมต้องมากกว่า 0";
-  if (!MONEY.test(value)) return "ยอดรวมต้องเป็นตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง";
-  if (/^[0.]+$/.test(value)) return "ยอดรวมต้องมากกว่า 0";
-  // Decimal(12,2) = จำนวนเต็มได้ไม่เกิน 10 หลัก (ไม่นับ 0 นำหน้า)
-  const wholeDigits = value.split(".")[0].replace(/^0+/, "");
-  if (wholeDigits.length > MAX_WHOLE_DIGITS) return "ยอดรวมสูงเกินไป";
-  return null;
-}
-
-/** "1,250.5" → "1250.50" — ทำกับข้อความล้วน ไม่แปลงเป็น number เพื่อไม่ให้ทศนิยมเพี้ยน */
-function normalizeMoney(value: string): string {
-  const [whole, fraction = ""] = value.replace(/,/g, "").split(".");
-  return `${whole}.${fraction.padEnd(2, "0")}`;
-}
 
 /** ช่องไม่บังคับ: ว่าง / มีแต่ช่องว่าง / ไม่ส่งมา → null */
 function optionalText() {
@@ -54,11 +35,12 @@ function orderSchema(now: Date) {
       .trim()
       .min(1, "กรุณากรอกยอดรวม")
       .superRefine((value, ctx) => {
-        const error = moneyError(value.replace(/,/g, ""));
+        const error = moneyError(value.replace(/,/g, ""), "ยอดรวม");
         if (error) ctx.addIssue({ code: "custom", message: error });
       })
       .transform(normalizeMoney),
     status: z.enum(ORDER_STATUSES, { error: "กรุณาเลือกสถานะ" }),
+    paymentMethod: z.enum(PaymentMethod, { error: "กรุณาเลือกวิธีชำระเงิน" }),
     orderedAt: z.preprocess(
       (value) => parseBangkokDateTimeInput(typeof value === "string" ? value : null),
       z
@@ -66,6 +48,8 @@ function orderSchema(now: Date) {
         .max(now, "วันเวลาที่สั่งต้องไม่อยู่ในอนาคต"),
     ),
     note: optionalText().pipe(z.string().max(500, "หมายเหตุยาวเกิน 500 ตัวอักษร").nullable()),
+    // ไม่บังคับตอนสร้าง — แต่ต้องมีก่อนบันทึกการจัดส่ง
+    shippingAddress: optionalText().pipe(z.string().max(500, "ที่อยู่จัดส่งยาวเกิน 500 ตัวอักษร").nullable()),
   });
 }
 
@@ -76,6 +60,8 @@ export const ORDER_FIELDS = [
   "status",
   "orderedAt",
   "note",
+  "shippingAddress",
+  "paymentMethod",
 ] as const;
 
 export type OrderFormData = z.output<ReturnType<typeof orderSchema>>;

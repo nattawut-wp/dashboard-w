@@ -10,7 +10,7 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
-    // ไม่เปิดให้สมัครเอง — สร้างบัญชีผู้ดูแลด้วย `npm run create-admin` เท่านั้น
+    // ไม่เปิดให้สมัครเอง — สร้างบัญชีด้วย `npm run create-admin` หรือหน้า /users (ต้อง login ก่อน)
     disableSignUp: true,
     minPasswordLength: PASSWORD_MIN_LENGTH,
     maxPasswordLength: PASSWORD_MAX_LENGTH,

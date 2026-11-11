@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { OrderForm } from "@/components/orders/order-form";
 import { getCurrentUser } from "@/lib/auth/session";
 import { toBangkokDateTimeInput } from "@/lib/orders/datetime";
+import { listProductOptions } from "@/lib/orders/data";
 import { newOrderFormDefaults } from "@/lib/orders/form-defaults";
 import { saveOrder } from "../actions";
 
@@ -23,10 +24,12 @@ export default function NewOrderPage() {
 async function NewOrderForm() {
   await getCurrentUser();
   const now = new Date();
+  const products = await listProductOptions();
   return (
     <OrderForm
       action={saveOrder.bind(null, null)}
       defaults={newOrderFormDefaults(now)}
+      products={products}
       maxOrderedAt={toBangkokDateTimeInput(now)}
       submitLabel="เพิ่มออร์เดอร์"
     />
