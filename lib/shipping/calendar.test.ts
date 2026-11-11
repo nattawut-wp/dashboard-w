@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bangkokDayRange, bangkokMonthRange, countByBangkokDay, monthGrid, parseDateKey, parseMonthKey, shiftMonth, visibleMonth } from "./calendar";
+import { bangkokDayRange, bangkokMonthRange, groupByBangkokDay, monthGrid, parseDateKey, parseMonthKey, shiftMonth, visibleMonth } from "./calendar";
 
 describe("parseDateKey", () => {
   it("รับเฉพาะ YYYY-MM-DD ที่เป็นวันจริง / ค่าอื่น → undefined", () => {
@@ -66,19 +66,6 @@ describe("bangkokDayRange / bangkokMonthRange", () => {
   });
 });
 
-describe("countByBangkokDay", () => {
-  it("นับตามวันไทย: 23:59 ไทย กับ 00:00 ไทย อยู่คนละวัน / null ไม่นับ / ว่าง → {}", () => {
-    expect(
-      countByBangkokDay([
-        new Date("2026-11-10T16:59:59Z"), // 10 พ.ย. 23:59 ไทย
-        new Date("2026-11-10T17:00:00Z"), // 11 พ.ย. 00:00 ไทย
-        new Date("2026-11-11T05:00:00Z"), // 11 พ.ย. 12:00 ไทย
-        null,
-      ]),
-    ).toEqual({ "2026-11-10": 1, "2026-11-11": 2 });
-    expect(countByBangkokDay([])).toEqual({});
-  });
-});
 
 describe("visibleMonth", () => {
   const now = new Date("2026-11-30T17:30:00Z"); // 1 ธ.ค. 00:30 ไทย (UTC ยังเป็น พ.ย.)
@@ -87,5 +74,16 @@ describe("visibleMonth", () => {
     expect(visibleMonth({ month: "2026-05", date: "2026-11-11" }, now)).toBe("2026-05");
     expect(visibleMonth({ date: "2026-11-11" }, now)).toBe("2026-11");
     expect(visibleMonth({}, now)).toBe("2026-12");
+  });
+});
+
+describe("groupByBangkokDay", () => {
+  it("จัดกลุ่มตามวันไทย คงลำดับเดิม / วันที่ null ไม่นับ / ว่าง → {}", () => {
+    const a = { id: 1, at: new Date("2026-11-10T16:59:59Z") }; // 10 พ.ย. 23:59 ไทย
+    const b = { id: 2, at: new Date("2026-11-10T17:00:00Z") }; // 11 พ.ย. 00:00 ไทย
+    const c = { id: 3, at: new Date("2026-11-11T05:00:00Z") }; // 11 พ.ย. 12:00 ไทย
+    const d = { id: 4, at: null };
+    expect(groupByBangkokDay([a, b, c, d], (x) => x.at)).toEqual({ "2026-11-10": [a], "2026-11-11": [b, c] });
+    expect(groupByBangkokDay([], (x: { at: Date }) => x.at)).toEqual({});
   });
 });

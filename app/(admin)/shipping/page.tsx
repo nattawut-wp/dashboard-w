@@ -14,7 +14,7 @@ import { formatBaht, SHOP_TIME_ZONE } from "@/lib/orders/format";
 import { cn } from "@/lib/utils";
 import { bangkokDateKey } from "@/lib/dashboard/dates";
 import { visibleMonth } from "@/lib/shipping/calendar";
-import { countShipments, countShipmentsByDay, listShipments, TAB_DATE_FIELD } from "@/lib/shipping/data";
+import { countShipments, listShipmentsByDay, listShipments, TAB_DATE_FIELD } from "@/lib/shipping/data";
 import {
   buildShippingHref,
   parseShippingListParams,
@@ -41,10 +41,10 @@ async function ShippingContent({ searchParams }: { searchParams: Promise<SearchP
   const params = parseShippingListParams(await searchParams);
   const now = new Date();
   const month = visibleMonth(params, now);
-  const [{ orders, totalItems, page, totalPages }, { counts, codOutstanding }, dayCounts] = await Promise.all([
+  const [{ orders, totalItems, page, totalPages }, { counts, codOutstanding }, calendarDays] = await Promise.all([
     listShipments(params),
     countShipments(),
-    countShipmentsByDay(params.tab, month),
+    listShipmentsByDay(params.tab, month),
   ]);
   const dateLabel = DATE_LABELS[TAB_DATE_FIELD[params.tab]];
   const filtered = Boolean(params.q || params.date);
@@ -55,7 +55,7 @@ async function ShippingContent({ searchParams }: { searchParams: Promise<SearchP
         params={params}
         month={month}
         today={bangkokDateKey(now)}
-        counts={dayCounts}
+        days={calendarDays}
         dateLabel={dateLabel}
       />
       <Tabs params={params} counts={counts} />
@@ -183,7 +183,7 @@ function SearchForm({ params }: { params: ShippingListParams }) {
 function ShippingSkeleton() {
   return (
     <div className="space-y-3" aria-label="กำลังโหลด">
-      <div className="h-80 w-full animate-pulse rounded-xl bg-muted sm:max-w-md" />
+      <div className="h-[30rem] w-full animate-pulse rounded-xl bg-muted" />
       <div className="h-10 w-80 max-w-full animate-pulse rounded-lg bg-muted" />
       {Array.from({ length: 3 }, (_, i) => (
         <div key={i} className="h-56 animate-pulse rounded-xl bg-muted" />

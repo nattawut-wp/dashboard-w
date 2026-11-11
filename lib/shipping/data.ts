@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { paginate, phoneSearchDigits } from "@/lib/list-params";
 import { prisma } from "@/lib/prisma";
-import { bangkokDayRange, bangkokMonthRange, countByBangkokDay } from "./calendar";
+import { bangkokDayRange, bangkokMonthRange, groupByBangkokDay } from "./calendar";
 import type { ShippingListParams, ShippingTab } from "./list-params";
 
 // ฟังก์ชันในไฟล์นี้ไม่เช็คสิทธิ์เอง — ผู้เรียกต้องเรียก getCurrentUser() ก่อนเสมอ
@@ -95,12 +95,19 @@ export async function countShipments() {
   };
 }
 
-/** จำนวนออร์เดอร์ต่อวันในเดือนที่ปฏิทินแสดง (ของแท็บนี้ ไม่สนคำค้น) → { "2026-11-11": 3 } */
-export async function countShipmentsByDay(tab: ShippingTab, month: string) {
+/** ออร์เดอร์ของแต่ละวันในเดือนที่ปฏิทินแสดง (ของแท็บนี้ ไม่สนคำค้น) เรียงตามเวลา → { "2026-11-11": [...] } */
+export async function listShipmentsByDay(tab: ShippingTab, month: string) {
   const field = TAB_DATE_FIELD[tab];
   const rows = await prisma.order.findMany({
     where: { AND: [TAB_WHERE[tab], dateWhere(tab, bangkokMonthRange(month))] },
-    select: { orderedAt: true, shippedAt: true },
+    select: { id: true, customerName: true, orderedAt: true, shippedAt: true },
+    orderBy: [{ [field]: "asc" }, { id: "asc" }],
   });
-  return countByBangkokDay(rows.map((row) => row[field]));
+  const days = groupByBangkokDay(rows, (row) => row[field]);
+  return Object.fromEntries(
+    Object.entries(days).map(([day, orders]) => [day, orders.map(({ id, customerName }) => ({ id, customerName }))]),
+  ) as Record<string, CalendarOrder[]>;
 }
+
+/** ข้อมูลที่ปฏิทินใช้ต่อออร์เดอร์ */
+export type CalendarOrder = { id: number; customerName: string };
