@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { paginate, phoneSearchDigits } from "@/lib/list-params";
 import { prisma } from "@/lib/prisma";
+import { bangkokDayRange, bangkokMonthRange, countByBangkokDay } from "./calendar";
 import type { ShippingListParams, ShippingTab } from "./list-params";
 
 // ฟังก์ชันในไฟล์นี้ไม่เช็คสิทธิ์เอง — ผู้เรียกต้องเรียก getCurrentUser() ก่อนเสมอ
@@ -44,7 +45,17 @@ const TAB_ORDER: Record<ShippingTab, Prisma.OrderOrderByWithRelationInput[]> = {
   COD: [{ shippedAt: { sort: "asc", nulls: "first" } }, { id: "asc" }], // ค้างเงินนานสุดก่อน
 };
 
-export async function listShipments({ tab, q, page }: ShippingListParams) {
+/** ปฏิทินใช้วันไหน: รอส่ง = วันที่ลูกค้าสั่ง, ส่งแล้ว/รอเงิน COD = วันที่ส่ง */
+export const TAB_DATE_FIELD = { PENDING: "orderedAt", SHIPPED: "shippedAt", COD: "shippedAt" } as const satisfies Record<
+  ShippingTab,
+  "orderedAt" | "shippedAt"
+>;
+
+function dateWhere(tab: ShippingTab, range: { gte: Date; lt: Date }): Prisma.OrderWhereInput {
+  return { [TAB_DATE_FIELD[tab]]: range };
+}
+
+export async function listShipments({ tab, q, page, date }: ShippingListParams) {
   const digits = phoneSearchDigits(q);
   const search: Prisma.OrderWhereInput = {
     OR: [
@@ -53,7 +64,9 @@ export async function listShipments({ tab, q, page }: ShippingListParams) {
       { trackingNumber: { contains: q.replace(/[\s-]/g, "").toUpperCase() } },
     ],
   };
-  const where: Prisma.OrderWhereInput = { AND: [TAB_WHERE[tab], ...(q ? [search] : [])] };
+  const where: Prisma.OrderWhereInput = {
+    AND: [TAB_WHERE[tab], ...(q ? [search] : []), ...(date ? [dateWhere(tab, bangkokDayRange(date))] : [])],
+  };
 
   const totalItems = await prisma.order.count({ where });
   const pagination = paginate(totalItems, page);
@@ -80,4 +93,14 @@ export async function countShipments() {
     counts: { PENDING: pending, SHIPPED: shipped, COD: cod._count } satisfies Record<ShippingTab, number>,
     codOutstanding: (cod._sum.total ?? 0).toString(),
   };
+}
+
+/** จำนวนออร์เดอร์ต่อวันในเดือนที่ปฏิทินแสดง (ของแท็บนี้ ไม่สนคำค้น) → { "2026-11-11": 3 } */
+export async function countShipmentsByDay(tab: ShippingTab, month: string) {
+  const field = TAB_DATE_FIELD[tab];
+  const rows = await prisma.order.findMany({
+    where: { AND: [TAB_WHERE[tab], dateWhere(tab, bangkokMonthRange(month))] },
+    select: { orderedAt: true, shippedAt: true },
+  });
+  return countByBangkokDay(rows.map((row) => row[field]));
 }
