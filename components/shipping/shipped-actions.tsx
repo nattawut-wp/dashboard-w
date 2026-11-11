@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { revertShipment, saveShipment } from "@/app/(admin)/shipping/actions";
 import { formatOrderNumber } from "@/lib/orders/format";
+import { ACTION_TONES } from "./action-tones";
 import { ShipForm } from "./ship-form";
 
 type Props = { orderId: number; carrier: string; trackingNumber: string; canRevert: boolean };
@@ -44,7 +45,7 @@ export function ShippedActions({ orderId, carrier, trackingNumber, canRevert }: 
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
+      <Button type="button" variant="outline" size="lg" onClick={() => setEditing(true)}>
         <Pencil className="size-4" />
         แก้เลขพัสดุ
       </Button>
@@ -75,7 +76,7 @@ function RevertButton({ orderId }: { orderId: number }) {
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button type="button" variant="ghost" size="sm" className="text-muted-foreground">
+        <Button type="button" size="lg" className={ACTION_TONES.warning.trigger}>
           <Undo2 className="size-4" />
           ย้อนกลับเป็นรอส่ง
         </Button>
@@ -89,7 +90,7 @@ function RevertButton({ orderId }: { orderId: number }) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>ยกเลิก</AlertDialogCancel>
-          <Button onClick={handleRevert} disabled={pending}>
+          <Button onClick={handleRevert} disabled={pending} className={ACTION_TONES.warning.confirm}>
             {pending && <Loader2 className="size-4 animate-spin" />}
             ย้อนกลับเป็นรอส่ง
           </Button>
