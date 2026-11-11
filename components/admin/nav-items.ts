@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingCart, Truck, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Truck, Users, type LucideIcon } from "lucide-react";
 
 export type NavItem = {
   href: string;
@@ -12,4 +12,5 @@ export const navItems: NavItem[] = [
   { href: "/orders", label: "ออร์เดอร์", icon: ShoppingCart },
   { href: "/products", label: "คลังสินค้า", icon: Package },
   { href: "/shipping", label: "จัดส่ง", icon: Truck },
+  { href: "/users", label: "ผู้ดูแล", icon: Users },
 ];
