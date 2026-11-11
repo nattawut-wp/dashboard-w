@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { ACTION_TONES, type ActionTone } from "./action-tones";
 import { markCodCollected, markReturned } from "@/app/(admin)/shipping/actions";
 import { formatBaht, formatOrderNumber } from "@/lib/orders/format";
 
@@ -28,6 +29,7 @@ export function CodActions({ orderId, total }: Props) {
       <ConfirmButton
         icon={<Banknote className="size-4" />}
         label="ได้รับเงินแล้ว"
+        tone="success"
         title={`ได้รับเงินปลายทาง ${formatBaht(total)} ของ ${number} แล้วใช่ไหม?`}
         description="ใช้เมื่อขนส่งโอนเงินเข้าบัญชีร้านแล้ว"
         action={() => markCodCollected(orderId)}
@@ -36,7 +38,7 @@ export function CodActions({ orderId, total }: Props) {
       <ConfirmButton
         icon={<PackageX className="size-4" />}
         label="ตีกลับ"
-        variant="ghost"
+        tone="danger"
         title={`${number} ตีกลับใช่ไหม?`}
         description="ลูกค้าไม่รับของ — ออร์เดอร์จะเปลี่ยนเป็น “ยกเลิก” และสินค้าจะถูกคืนเข้าคลัง (ย้อนกลับไม่ได้)"
         action={() => markReturned(orderId)}
@@ -53,10 +55,10 @@ type ConfirmButtonProps = {
   description: string;
   action: () => Promise<{ success: boolean; message?: string }>;
   successMessage: string;
-  variant?: "outline" | "ghost";
+  tone: ActionTone;
 };
 
-function ConfirmButton({ icon, label, title, description, action, successMessage, variant = "outline" }: ConfirmButtonProps) {
+function ConfirmButton({ icon, label, title, description, action, successMessage, tone }: ConfirmButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -77,7 +79,7 @@ function ConfirmButton({ icon, label, title, description, action, successMessage
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button type="button" variant={variant} size="sm">
+        <Button type="button" size="lg" className={ACTION_TONES[tone].trigger}>
           {icon}
           {label}
         </Button>
@@ -90,7 +92,7 @@ function ConfirmButton({ icon, label, title, description, action, successMessage
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>ยกเลิก</AlertDialogCancel>
           {/* ใช้ Button ธรรมดา (ไม่ใช่ AlertDialogAction) เพื่อไม่ให้กล่องปิดก่อนบันทึกเสร็จ */}
-          <Button onClick={handleConfirm} disabled={pending}>
+          <Button onClick={handleConfirm} disabled={pending} className={ACTION_TONES[tone].confirm}>
             {pending && <Loader2 className="size-4 animate-spin" />}
             {label}
           </Button>
