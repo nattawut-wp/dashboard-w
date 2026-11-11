@@ -2,11 +2,12 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatOrderNumber, SHOP_TIME_ZONE } from "@/lib/orders/format";
+import { SHOP_TIME_ZONE } from "@/lib/orders/format";
 import { monthGrid, shiftMonth } from "@/lib/shipping/calendar";
 import type { CalendarOrder } from "@/lib/shipping/data";
 import { buildShippingHref, type ShippingListParams } from "@/lib/shipping/list-params";
 import { cn } from "@/lib/utils";
+import { CalendarMore } from "./calendar-more";
 
 const WEEKDAYS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
 
@@ -90,6 +91,7 @@ export function ShippingCalendar({ params, month, today, days, dateLabel }: Prop
                         isToday={dateKey === today}
                         // กดวันที่เลือกอยู่ซ้ำ = ยกเลิกการกรอง
                         href={buildShippingHref({ ...base, month, date: dateKey === params.date ? undefined : dateKey })}
+                        dayHref={buildShippingHref({ ...base, month, date: dateKey })}
                       />
                     ) : (
                       <div className="min-h-20 bg-muted/40 sm:min-h-24" />
@@ -111,32 +113,34 @@ function DayCell({
   selected,
   isToday,
   href,
+  dayHref,
 }: {
   dateKey: string;
   orders: CalendarOrder[];
   selected: boolean;
   isToday: boolean;
   href: string;
+  dayHref: string;
 }) {
   const day = Number(dateKey.slice(8));
   const count = orders.length;
-  const label = `${dayLabel.format(noonOf(dateKey))} ${count > 0 ? `${count} ออร์เดอร์` : "ไม่มีออร์เดอร์"}`;
+  const longDate = dayLabel.format(noonOf(dateKey));
+  const label = `${longDate} ${count > 0 ? `${count} ออร์เดอร์` : "ไม่มีออร์เดอร์"}`;
   const mobileMore = count - MOBILE_NAMES;
   const desktopMore = count - DESKTOP_NAMES;
 
   return (
-    <Link
-      href={href}
-      aria-label={label}
-      aria-current={selected ? "date" : undefined}
+    // ลิงก์ของช่องวางทับทั้งช่อง (กดตรงไหนก็กรองวัน) ส่วนปุ่ม "+N" ลอยอยู่ด้านบนให้กดแยกได้
+    <div
       className={cn(
-        "flex min-h-20 flex-col gap-0.5 p-0.5 sm:min-h-24 sm:p-1",
+        "relative flex min-h-20 flex-col gap-0.5 p-0.5 sm:min-h-24 sm:p-1",
         selected ? "bg-primary/10 ring-2 ring-primary ring-inset" : "hover:bg-muted/60",
       )}
     >
+      <Link href={href} aria-label={label} aria-current={selected ? "date" : undefined} className="absolute inset-0" />
       <span
         className={cn(
-          "mx-auto flex size-6 items-center justify-center rounded-full text-xs tabular-nums sm:mx-0",
+          "pointer-events-none mx-auto flex size-6 items-center justify-center rounded-full text-xs tabular-nums sm:mx-0",
           isToday ? "bg-primary font-semibold text-primary-foreground" : count === 0 && "text-muted-foreground",
         )}
       >
@@ -145,9 +149,8 @@ function DayCell({
       {orders.slice(0, DESKTOP_NAMES).map((order, i) => (
         <span
           key={order.id}
-          title={`${formatOrderNumber(order.id)} ${order.customerName}`}
           className={cn(
-            "truncate rounded bg-emerald-100 px-1 text-[10px] leading-4 text-emerald-800 sm:text-xs sm:leading-5 dark:bg-emerald-900/50 dark:text-emerald-200",
+            "pointer-events-none truncate rounded bg-emerald-100 px-1 text-[10px] leading-4 text-emerald-800 sm:text-xs sm:leading-5 dark:bg-emerald-900/50 dark:text-emerald-200",
             i >= MOBILE_NAMES && "hidden sm:block",
           )}
         >
@@ -155,11 +158,8 @@ function DayCell({
         </span>
       ))}
       {mobileMore > 0 && (
-        <span className="px-1 text-[10px] font-medium text-muted-foreground sm:hidden">+{mobileMore}</span>
+        <CalendarMore title={longDate} orders={orders} mobileMore={mobileMore} desktopMore={desktopMore} dayHref={dayHref} />
       )}
-      {desktopMore > 0 && (
-        <span className="hidden px-1 text-xs font-medium text-muted-foreground sm:block">อีก {desktopMore}</span>
-      )}
-    </Link>
+    </div>
   );
 }
