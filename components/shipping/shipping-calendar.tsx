@@ -147,7 +147,7 @@ function DayCell({
           key={order.id}
           title={`${formatOrderNumber(order.id)} ${order.customerName}`}
           className={cn(
-            "truncate rounded bg-primary/15 px-1 text-[10px] leading-4 text-primary sm:text-xs sm:leading-5",
+            "truncate rounded bg-emerald-100 px-1 text-[10px] leading-4 text-emerald-800 sm:text-xs sm:leading-5 dark:bg-emerald-900/50 dark:text-emerald-200",
             i >= MOBILE_NAMES && "hidden sm:block",
           )}
         >
