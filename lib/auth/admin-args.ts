@@ -1,13 +1,7 @@
 import type { z } from "zod";
-import { emailSchema, passwordSchema, PASSWORD_MIN_LENGTH } from "./validation";
+import { emailSchema, newPasswordSchema } from "./validation";
 
 export const CREATE_ADMIN_USAGE = 'วิธีใช้: npm run create-admin -- <อีเมล> <รหัสผ่าน> ["ชื่อ"]';
-
-// รหัสผ่านตอนสร้างบัญชีต้องยาวพอ (ตอน login ไม่บังคับ — แค่บอกว่ารหัสผิด)
-const newPasswordSchema = passwordSchema.min(
-  PASSWORD_MIN_LENGTH,
-  `รหัสผ่านต้องยาวอย่างน้อย ${PASSWORD_MIN_LENGTH} ตัวอักษร`,
-);
 
 export type AdminInput = { email: string; password: string; name: string };
 export type AdminArgsResult =
